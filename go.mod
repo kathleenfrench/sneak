@@ -4,6 +4,7 @@ go 1.12
 
 require (
 	github.com/Netflix/go-expect v0.0.0-20200312175327-da48e75238e2 // indirect
+	github.com/asaskevich/govalidator v0.0.0-20200428143746-21a406dcc535
 	github.com/creack/pty v1.1.11 // indirect
 	github.com/fatih/color v1.9.0
 	github.com/hinshun/vt10x v0.0.0-20180809195222-d55458df857c // indirect

@@ -1,14 +1,16 @@
 package config
 
 import (
+	"errors"
 	"fmt"
 	"path/filepath"
 	"reflect"
 	"strings"
 
+	"github.com/asaskevich/govalidator"
 	"github.com/fatih/color"
-	"github.com/kathleenfrench/common/pkg/extract"
-	"github.com/kathleenfrench/common/pkg/gui"
+	"github.com/kathleenfrench/common/extract"
+	"github.com/kathleenfrench/common/gui"
 	"github.com/spf13/viper"
 )
 
@@ -76,7 +78,7 @@ func UpdateSettingsPrompt(viperSettings map[string]interface{}) error {
 			var newIP string
 			editExisting := gui.ConfirmPrompt("do you want to modify an existing IP?", "", false, true)
 			if editExisting {
-				shortKeys := extract.GetKeysFromMapString(ips)
+				shortKeys := extract.KeysFromMapString(ips)
 				editWhich := gui.SelectPromptWithResponse("which do you want to change?", shortKeys, nil, false)
 				newIP = gui.InputPromptWithResponse(fmt.Sprintf("what do you want to change %s to?", editWhich), "", true)
 				choice = fmt.Sprintf("box_ips.%s", editWhich)
