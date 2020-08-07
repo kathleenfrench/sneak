@@ -78,12 +78,17 @@ func checkForUnsetRequiredDefaults() bool {
 
 	if unset(viper.Get("htb_username")) {
 		unsetFound = true
-		viper.Set("htb_username", "nightwd60")
+		htbUsername := gui.InputPromptWithResponse("what is your hack the box username?", "", true)
+		viper.Set("htb_username", htbUsername)
 	}
 
 	if unset(viper.Get("box_ips")) {
 		unsetFound = true
-		viper.Set("box_ips", make(map[string]string))
+		exampleBoxIPMap := map[string]string{
+			"example": "10.10.10.XXX",
+		}
+
+		viper.Set("box_ips", exampleBoxIPMap)
 	}
 
 	if unset(viper.Get("openvpn_filepath")) {

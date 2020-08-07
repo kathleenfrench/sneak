@@ -29,6 +29,16 @@ func Parse(v *viper.Viper) (Settings, error) {
 	return s, nil
 }
 
+// ParseAndUpdate parses the viper settings as a sneak settings struct and updates the config file
+func ParseAndUpdate(v *viper.Viper) error {
+	s, err := Parse(v)
+	if err != nil {
+		return err
+	}
+
+	return s.UpdateSettings()
+}
+
 func decodeWithYaml(tagName string) viper.DecoderConfigOption {
 	return func(c *mapstructure.DecoderConfig) {
 		c.TagName = tagName

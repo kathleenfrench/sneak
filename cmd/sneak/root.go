@@ -19,9 +19,11 @@ var (
 )
 
 var rootCmd = &cobra.Command{
-	Use:     "sneak",
-	Aliases: []string{"snk"},
-	Short:   "a tool for common actions when pentesting/playing CTFs",
+	Use:   "sneak",
+	Short: "a tool for common actions when pentesting/playing CTFs",
+	Run: func(cmd *cobra.Command, args []string) {
+		cmd.Usage()
+	},
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		s, err := config.Parse(viper.GetViper())
 		if err != nil {
@@ -50,4 +52,6 @@ func initGlobalFlags() {
 func init() {
 	cobra.OnInitialize(config.Initialize)
 	initGlobalFlags()
+
+	rootCmd.AddCommand(configCmd)
 }
