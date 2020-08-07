@@ -3,9 +3,9 @@ package config
 import (
 	"fmt"
 
+	"github.com/kathleenfrench/common/fs"
 	"github.com/kathleenfrench/common/gui"
-	"github.com/kathleenfrench/pls/pkg/utils"
-	"github.com/mitchellh/go-homedir"
+	homedir "github.com/mitchellh/go-homedir"
 	"github.com/spf13/viper"
 )
 
@@ -31,12 +31,12 @@ func Initialize() {
 	viper.SetConfigFile(fmt.Sprintf("%s/%s.%s", constructConfigPath(), configFileName, configFileType))
 
 	// check for whether the directory and config file already exist
-	err := utils.CreateDir(constructConfigPath())
+	err := fs.CreateDir(constructConfigPath())
 	if err != nil {
 		gui.ExitWithError(err)
 	}
 
-	err = utils.CreateFile(viper.ConfigFileUsed())
+	err = fs.CreateFile(viper.ConfigFileUsed())
 	if err != nil {
 		gui.ExitWithError(err)
 	}
