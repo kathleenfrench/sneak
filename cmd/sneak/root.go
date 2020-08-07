@@ -1,8 +1,6 @@
 package sneak
 
 import (
-	"os"
-
 	"github.com/kathleenfrench/common/gui"
 	"github.com/kathleenfrench/sneak/internal/config"
 	"github.com/spf13/cobra"
@@ -13,7 +11,12 @@ import (
 var Version = "master"
 
 // local
-var sneakCfg config.Settings
+var (
+	// sneakCfg are the struct representation of sneak settings
+	sneakCfg config.Settings
+	// cfgfile is the path to the sneak config file different than the default
+	cfgFile string
+)
 
 var rootCmd = &cobra.Command{
 	Use:     "sneak",
@@ -22,7 +25,7 @@ var rootCmd = &cobra.Command{
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		s, err := config.Parse(viper.GetViper())
 		if err != nil {
-			os.Exit(0)
+			gui.ExitWithError(err)
 		}
 
 		sneakCfg = s
@@ -34,4 +37,17 @@ func Execute() {
 	if err := rootCmd.Execute(); err != nil {
 		gui.ExitWithError(err)
 	}
+}
+
+// -------------------- init
+
+func initGlobalFlags() {
+	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.config/sneak/config.yaml)")
+	rootCmd.PersistentFlags().Bool("viper", true, "use viper for configuration")
+	viper.BindPFlag("useViper", rootCmd.PersistentFlags().Lookup("viper"))
+}
+
+func init() {
+	cobra.OnInitialize(config.Initialize)
+	initGlobalFlags()
 }
