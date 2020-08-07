@@ -3,6 +3,7 @@ package sneak
 import (
 	"os"
 
+	"github.com/kathleenfrench/common/gui"
 	"github.com/kathleenfrench/sneak/internal/config"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -26,4 +27,11 @@ var rootCmd = &cobra.Command{
 
 		sneakCfg = s
 	},
+}
+
+// Execute adds all child commands to the root command set sets flags appropriately
+func Execute() {
+	if err := rootCmd.Execute(); err != nil {
+		gui.ExitWithError(err)
+	}
 }
