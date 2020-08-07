@@ -2,6 +2,8 @@ package config
 
 import (
 	"fmt"
+	"os"
+	"path"
 
 	"github.com/kathleenfrench/common/fs"
 	"github.com/kathleenfrench/common/gui"
@@ -9,98 +11,73 @@ import (
 	"github.com/spf13/viper"
 )
 
-const configPathRelativeToHome = ".config/sneak"
-const configFileName = "config"
-const configFileType = "yaml"
+var configName = ".sneak"
+var configType = "yaml"
 
-func constructConfigPath() string {
+// InitConfig initializes viper with sneak defaults
+func InitConfig() {
+	viper.SetConfigType(configType)
+	viper.SetEnvPrefix("SNEAK")
+	viper.AutomaticEnv()
+	viper.SetConfigName(configName)
+
 	home, err := homedir.Dir()
 	if err != nil {
 		gui.ExitWithError(err)
 	}
 
-	return fmt.Sprintf("%s/%s", home, configPathRelativeToHome)
-}
-
-// Initialize creates the directory and/or file with defaults for the application's configuration settings
-func Initialize() {
-	// set fs properties
-	viper.AddConfigPath(constructConfigPath())
-	viper.SetConfigName(configFileName)
-	viper.SetConfigType(configFileType)
-	viper.SetConfigFile(fmt.Sprintf("%s/%s.%s", constructConfigPath(), configFileName, configFileType))
+	cfgPath := fmt.Sprintf("%s/.sneak", home)
 
 	// check for whether the directory and config file already exist
-	err := fs.CreateDir(constructConfigPath())
+	err = fs.CreateDir(cfgPath)
 	if err != nil {
 		gui.ExitWithError(err)
 	}
 
-	err = fs.CreateFile(viper.ConfigFileUsed())
-	if err != nil {
-		gui.ExitWithError(err)
+	viper.AddConfigPath(cfgPath)
+	viper.Set("cfg_dir", cfgPath)
+
+	if err := viper.ReadInConfig(); err != nil {
+		gui.Warn(fmt.Sprintf("not seeing a config file where i'd expect it in %s - one sec...", cfgPath), nil)
 	}
+}
 
-	viper.AutomaticEnv()
+// SafeWriteConfig creates the config file if it doesn't exist yet
+func SafeWriteConfig() error {
+	// configFilePath := path.Join(viper.GetString())
+	dir := viper.GetString("cfg_dir")
+	filepath := path.Join(dir, configName+"."+configType)
 
-	_ = viper.SafeWriteConfig()
-	err = viper.ReadInConfig()
-	if err != nil {
-		err = viper.WriteConfig()
+	dirExists := fs.DirExists(dir)
+	if !dirExists {
+		err := fs.CreateDir(dir)
 		if err != nil {
-			gui.ExitWithError(err)
+			return fmt.Errorf("could not create the config directory for sneak: %s", err)
 		}
+	}
+
+	exists := fs.FileExists(filepath)
+	if exists {
+		return nil
+	}
+
+	gui.Info("popcorn", "creating your config file...", filepath)
+
+	if _, err := os.OpenFile(filepath, os.O_RDONLY|os.O_CREATE, 0600); err != nil {
+		gui.Warn("could not create configuration file", filepath)
+		return err
 	}
 
 	// set defaults
-	unsetValuesFound := checkForUnsetRequiredDefaults()
-	if unsetValuesFound {
-		err = viper.WriteConfig()
-		if err != nil {
-			gui.ExitWithError(err)
-		}
-	}
+	htbUsername := gui.InputPromptWithResponse("what is your hack the box username?", "", true)
+	viper.Set("htb_username", htbUsername)
+	exampleBoxIPMap := map[string]string{"example": "10.10.10.XXX"}
+	viper.Set("box_ips", exampleBoxIPMap)
+	viper.Set("openvpn_filepath", fmt.Sprintf("%s/%s.ovpn", dir, viper.Get("htb_username")))
+	preferredEditor := gui.GetUsersPreferredEditor("", true)
+	viper.Set("default_editor", preferredEditor)
 
-	viper.WatchConfig()
-
-}
-
-func unset(val interface{}) bool {
-	if val == nil || val == "" {
-		return true
-	}
-
-	return false
-}
-
-func checkForUnsetRequiredDefaults() bool {
-	var unsetFound bool
-
-	if unset(viper.Get("htb_username")) {
-		unsetFound = true
-		htbUsername := gui.InputPromptWithResponse("what is your hack the box username?", "", true)
-		viper.Set("htb_username", htbUsername)
-	}
-
-	if unset(viper.Get("box_ips")) {
-		unsetFound = true
-		exampleBoxIPMap := map[string]string{
-			"example": "10.10.10.XXX",
-		}
-
-		viper.Set("box_ips", exampleBoxIPMap)
-	}
-
-	if unset(viper.Get("openvpn_filepath")) {
-		unsetFound = true
-		viper.Set("openvpn_filepath", fmt.Sprintf("%s/%s.ovpn", constructConfigPath(), viper.Get("htb_username")))
-	}
-
-	if unset(viper.Get("default_editor")) {
-		unsetFound = true
-		preferredEditor := gui.GetUsersPreferredEditor("", true)
-		viper.Set("default_editor", preferredEditor)
-	}
-
-	return unsetFound
+	// write config file
+	gui.Info("popcorn", "writing sneak defaults...", filepath)
+	return viper.WriteConfigAs(filepath)
 }

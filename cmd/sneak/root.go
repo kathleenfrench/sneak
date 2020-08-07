@@ -25,17 +25,23 @@ var rootCmd = &cobra.Command{
 		cmd.Usage()
 	},
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		s, err := config.Parse(viper.GetViper())
+		err := config.SafeWriteConfig()
 		if err != nil {
 			gui.ExitWithError(err)
 		}
 
-		sneakCfg = s
+		sneakCfg, err = config.Parse(viper.GetViper())
+		if err != nil {
+			gui.ExitWithError(err)
+		}
 	},
 }
 
 // Execute adds all child commands to the root command set sets flags appropriately
 func Execute() {
+	cobra.OnInitialize(config.InitConfig)
+	initGlobalFlags()
+
 	if err := rootCmd.Execute(); err != nil {
 		gui.ExitWithError(err)
 	}
@@ -50,8 +56,5 @@ func initGlobalFlags() {
 }
 
 func init() {
-	cobra.OnInitialize(config.Initialize)
-	initGlobalFlags()
-
 	rootCmd.AddCommand(configCmd)
 }

@@ -8,7 +8,7 @@ require (
 	github.com/creack/pty v1.1.11 // indirect
 	github.com/fatih/color v1.9.0
 	github.com/hinshun/vt10x v0.0.0-20180809195222-d55458df857c // indirect
-	github.com/kathleenfrench/common v0.0.0-20200807221619-6aa81a23d994
+	github.com/kathleenfrench/common v0.0.0-20200807233207-e4d918dbc621
 	github.com/kr/pty v1.1.8 // indirect
 	github.com/mattn/go-colorable v0.1.7 // indirect
 	github.com/mgutz/ansi v0.0.0-20200706080929-d51e80ef957d // indirect
@@ -23,7 +23,7 @@ require (
 	golang.org/x/net v0.0.0-20200707034311-ab3426394381 // indirect
 	golang.org/x/sys v0.0.0-20200806125547-5acd03effb82 // indirect
 	golang.org/x/text v0.3.3 // indirect
-	golang.org/x/tools v0.0.0-20200807210451-92211316783d // indirect
+	golang.org/x/tools v0.0.0-20200807224323-c05a0f5be48b // indirect
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
 	gopkg.in/check.v1 v1.0.0-20200227125254-8fa46927fb4f // indirect
 	gopkg.in/yaml.v3 v3.0.0-20200615113413-eeeca48fe776 // indirect

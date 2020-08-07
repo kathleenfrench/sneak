@@ -45,14 +45,27 @@ func (s *Settings) UpdateSettings() error {
 	return nil
 }
 
+func filterForChangeableConfigs(keys []string) []string {
+	eligible := []string{}
+	for _, k := range keys {
+		switch k {
+		case "useviper", "cfg_dir":
+			break
+		default:
+			eligible = append(eligible, k)
+		}
+	}
+
+	return eligible
+}
+
 // UpdateSettingsPrompt creates a dropdown in the terminal UI for the user to select which config value to change
 func UpdateSettingsPrompt(viperSettings map[string]interface{}) error {
 	var changedValue string
 
 	v := viper.GetViper()
-	keys := viper.AllKeys()
+	keys := filterForChangeableConfigs(viper.AllKeys())
 	choice := gui.SelectPromptWithResponse("which config value do you want to change?", keys, nil, false)
-
 	configType := reflect.TypeOf(v.Get(choice))
 
 	switch configType.Kind() {
