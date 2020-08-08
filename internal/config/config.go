@@ -15,18 +15,20 @@ type Settings struct {
 }
 
 // Parse unmarshals the viper configs into the sneak settings struct
-func Parse(v *viper.Viper) (Settings, error) {
-	s := Settings{
-		viper: v,
-	}
-
+func Parse(v *viper.Viper) (*Settings, error) {
+	cfg.viper = v
 	dco := decodeWithYaml("yaml")
-	err := v.Unmarshal(&s, dco)
+	err := v.Unmarshal(cfg, dco)
 	if err != nil {
-		return s, err
+		return cfg, err
 	}
 
-	return s, nil
+	return cfg, nil
+}
+
+// GetSettings returns the settings
+func GetSettings() *Settings {
+	return cfg
 }
 
 // ParseAndUpdate parses the viper settings as a sneak settings struct and updates the config file

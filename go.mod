@@ -5,26 +5,41 @@ go 1.12
 require (
 	github.com/Netflix/go-expect v0.0.0-20200312175327-da48e75238e2 // indirect
 	github.com/asaskevich/govalidator v0.0.0-20200428143746-21a406dcc535
+	github.com/boltdb/bolt v1.3.1 // indirect
 	github.com/creack/pty v1.1.11 // indirect
+	github.com/elazarl/go-bindata-assetfs v1.0.1 // indirect
+	github.com/evnix/boltdbweb v0.0.0-20191029203843-5b16e6623bd9 // indirect
 	github.com/fatih/color v1.9.0
+	github.com/gin-gonic/gin v1.6.3 // indirect
+	github.com/go-playground/validator/v10 v10.3.0 // indirect
+	github.com/golang/protobuf v1.4.2 // indirect
 	github.com/hinshun/vt10x v0.0.0-20180809195222-d55458df857c // indirect
-	github.com/kathleenfrench/common v0.0.0-20200807233207-e4d918dbc621
+	github.com/json-iterator/go v1.1.10 // indirect
+	github.com/kathleenfrench/common v0.0.0-20200808173134-fd634c37ab43
+	github.com/kathleenfrench/pls v0.0.0-20200807055847-c9378ec0766c // indirect
 	github.com/kr/pty v1.1.8 // indirect
+	github.com/kval-access-language/kval-boltdb v0.0.0-20170330045345-f3797777c95e
+	github.com/kval-access-language/kval-parse v0.0.0-20170504112528-b96aa5a26330 // indirect
+	github.com/kval-access-language/kval-scanner v0.0.0-20170504112421-4f097cacd289 // indirect
+	github.com/kyokomi/emoji v2.2.4+incompatible
 	github.com/mattn/go-colorable v0.1.7 // indirect
+	github.com/mattn/go-runewidth v0.0.9 // indirect
 	github.com/mgutz/ansi v0.0.0-20200706080929-d51e80ef957d // indirect
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/mitchellh/mapstructure v1.3.3
+	github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e // indirect
+	github.com/olekukonko/tablewriter v0.0.4
+	github.com/pkg/errors v0.9.1 // indirect
+	github.com/sirupsen/logrus v1.6.0 // indirect
 	github.com/spf13/cobra v1.0.0
 	github.com/spf13/viper v1.7.1
-	github.com/stretchr/objx v0.3.0 // indirect
 	github.com/stretchr/testify v1.6.1 // indirect
-	github.com/yuin/goldmark v1.2.1 // indirect
+	github.com/timshannon/bolthold v0.0.0-20200721214230-3be86da07fdb
+	go.etcd.io/bbolt v1.3.2
 	golang.org/x/crypto v0.0.0-20200728195943-123391ffb6de // indirect
-	golang.org/x/net v0.0.0-20200707034311-ab3426394381 // indirect
 	golang.org/x/sys v0.0.0-20200806125547-5acd03effb82 // indirect
 	golang.org/x/text v0.3.3 // indirect
-	golang.org/x/tools v0.0.0-20200807224323-c05a0f5be48b // indirect
-	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
+	google.golang.org/protobuf v1.25.0 // indirect
 	gopkg.in/check.v1 v1.0.0-20200227125254-8fa46927fb4f // indirect
 	gopkg.in/yaml.v3 v3.0.0-20200615113413-eeeca48fe776 // indirect
 )

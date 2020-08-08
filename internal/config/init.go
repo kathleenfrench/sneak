@@ -15,8 +15,14 @@ import (
 var configName = ".sneak"
 var configType = "yaml"
 
+var cfg *Settings
+
 // InitConfig initializes viper with sneak defaults
 func InitConfig() {
+	if cfg == nil {
+		cfg = &Settings{}
+	}
+
 	viper.SetConfigType(configType)
 	viper.SetEnvPrefix("SNEAK")
 	viper.AutomaticEnv()
