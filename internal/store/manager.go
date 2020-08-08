@@ -271,6 +271,8 @@ func (m *manager) bucketItems(bucketQuery string, goBack bool) {
 			}
 		}
 
+		color.HiBlue("# OF RESULTS FOUND: %d", len(res.Result))
+
 		if len(res.Result) == 0 {
 			if !res.Exists {
 				fmt.Fprintf(os.Stdout, color.RedString("No results found\n\n"))
@@ -287,9 +289,12 @@ func (m *manager) bucketItems(bucketQuery string, goBack bool) {
 			}
 		}
 
+		fmt.Fprintf(os.Stdout, fmt.Sprintf("\n%s\nKEYS IN BUCKET:%d\nB+ TREE DEPTH: %d\nINLINE BUCKETS: %d\n\n", color.HiBlueString("STATS"), res.Stats.KeyN, res.Stats.Depth, res.Stats.InlineBucketN))
+
 		for k, v := range res.Result {
 			item := item{}
 			if v == kval.Nestedbucket {
+				color.Red("IS NESTED BUCKET")
 				item.Key = strings.TrimSpace(string(k)) + "*"
 				item.Value = v
 				item.Nested = true
@@ -337,10 +342,13 @@ func (d dbDisplay) DumpBuckets(w io.Writer, bs []bucket) {
 
 func (d dbDisplay) DumpBucketItems(w io.Writer, bucket string, items []item) {
 	color.Yellow("[BUCKET]: %s", bucket)
-	color.HiBlue("# OF RESULTS FOUND: %d", len(items))
 	t := tablewriter.NewWriter(w)
 	t.SetHeader([]string{"Key", "Value"})
 	for _, i := range items {
+		if i.Value == "" {
+			return
+		}
+
 		row := []string{}
 		if i.Nested {
 			row = append(row, i.Key, "")
