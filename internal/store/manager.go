@@ -8,6 +8,7 @@ import (
 	"log"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/fatih/color"
 	"github.com/kathleenfrench/common/fs"
@@ -16,10 +17,97 @@ import (
 	"github.com/olekukonko/tablewriter"
 )
 
-const helpText = "> Type bucket name to explore [quit: :q/CTRL+C] [go back: :b] [return to root bucket: ENTER]"
+// h/t: https://github.com/hasit/bolter
+
+var helpText = `<CONTROLS>
+[:q/CTRL+C to exit] [:b to go back] [:help for query help] 
+[:examples for more query examples] [ENTER to return to root bucket]
+`
+
+const kvalHelpText = `
+<FUNCTIONS>
+
+INS   Insert
+GET   Get values
+LIS   Check existence
+DEL   Delete
+REN   Rename
+
+<OPERATORS>
+
+>>    Bucket:Bucket relationship
+>>>>  Bucket:Key relationship
+::    Key::Value releationship
+=>    Name assignment
+_     Wildcard
+
+<CAPABILITIES>
+{PAT} Given a regex {PAT} for Key XOR Value, find match.
+
+<RESTRICTONS>
+Must be >= 1 Buckets for data. 
+{PAT} is not a valid option for an INS query.
+`
+
+const kvalExamples = `
+<INSERTS AND GETS>
+
+INS Prime Bucket >> Secondary Bucket >> Tertiary Bucket >>>> Key :: Value
+INS Prime Bucket >> Secondary Bucket >> Tertiary Bucket
+GET Prime Bucket >> Secondary Bucket >> Tertiary Bucket >>>> Key :: Value
+GET Prime Bucket >> Secondary Bucket >> Tertiary Bucket >>>> Key
+GET Prime Bucket >> Secondary Bucket >> Tertiary Bucket
+GET Prime Bucket >> Secondary Bucket >> Tertiary Bucket >>>> {PAT}
+GET Prime Bucket >> Secondary Bucket >> Tertiary Bucket >>>> _ :: Value
+GET Prime Bucket >> Secondary Bucket >> Tertiary Bucket >>>> _ :: {PAT}
+LIS Prime Bucket >> Secondary Bucket >> Tertiary Bucket >>>> Key
+LIS Prime Bucket >> Secondary Bucket >> Tertiary Bucket 
+DEL Prime Bucket >> Secondary Bucket >> Tertiary Bucket
+DEL Prime Bucket >> Secondary Bucket >> Tertiary Bucket >>>> Key
+DEL Prime Bucket >> Secondary Bucket >> Tertiary Bucket >>>> Key :: _
+DEL Prime Bucket >> Secondary Bucket >> Tertiary Bucket >>>> _      
+REN Prime Bucket >> Secondary Bucket >> Tertiary Bucket >>>> Key => Key
+REN Prime Bucket >> Secondary Bucket >> Tertiary Bucket => Third Bucket
+GET _
+
+<OPERATIONS>
+Bucket B exists inside Bucket A:                A >> B  
+Check existence of Bucket B inside Bucket A:    LIS A >> B              [Return: True]
+Get key value pairs in B:                       GET A >> B
+Get Root Bucket Contents                     GET _
+
+Key K1 exists inside Bucket A:                  A >>>> K1
+Check K1 exists inside Bucket A:                LIS A >>>> K1
+Get value for K1:                               GET A >>>> K1
+Add value for K1:                               INS A >>>> K1 :: V1
+Delete K1 value:                                DEL A >>>> K1 :: _
+Delete Values for Keys in Bucket A              DEL A >>>> _
+
+Delete A:                                       DEL A
+Delete B:                                       DEL A >> B
+
+Rename K1:                                      REN A >>>> K1 => K2
+Rename B:                                       REN A >>>> B => C
+`
+
+func printRunQuery() {
+	fmt.Fprintf(os.Stdout, "\n%s\n\n", color.YellowString("> Run a query"))
+}
 
 func printHelpText() {
-	fmt.Fprintf(os.Stdout, "\n%s\n\n", helpText)
+	fmt.Fprintf(os.Stdout, "\n%s\n", helpText)
+}
+
+func printKvalHelpText() {
+	color.HiBlue("KVAL (Key Value Access Language) - see full specs at: https://github.com/kval-access-language/kval-language-specification")
+	fmt.Fprintf(os.Stdout, "%s\n", kvalHelpText)
+	printRunQuery()
+}
+
+func printKvalExamplesText() {
+	color.HiBlue("QUERY EXAMPLES")
+	fmt.Fprintf(os.Stdout, "%s\n", kvalExamples)
+	printRunQuery()
 }
 
 type manager struct {
@@ -63,52 +151,71 @@ func Audit(dbFilepath string) error {
 	m.connect(dbFilepath)
 	defer kval.Disconnect(m.kb)
 
+	printHelpText()
 	m.readInput()
 	return nil
 }
 
 func (m *manager) readInput() {
-
 	m.bucketlist()
 	s := bufio.NewScanner(os.Stdin)
 	for s.Scan() {
-		bucket := s.Text()
+		bucketQuery := s.Text()
 		fmt.Fprintln(os.Stdout, "")
-		switch bucket {
-		case ":q":
+		switch bucketQuery {
+		case ":q", "\x18":
 			color.HiCyan("exiting...")
 			os.Exit(0)
-		case "\x18":
-			return
 		case ":b":
 			if !strings.Contains(m.currentLoc, "") || !strings.Contains(m.currentLoc, ">>") {
 				fmt.Fprintf(os.Stdout, "%s\n", "> going back...")
 				m.currentLoc = ""
 				m.bucketlist()
 			} else {
-				m.bucketItems(bucket, true)
+				m.bucketItems(bucketQuery, true)
 			}
+		case ":help":
+			printKvalHelpText()
+		case ":examples":
+			printKvalExamplesText()
 		case "":
 			m.bucketlist()
 		default:
-			m.bucketItems(bucket, false)
+			m.bucketItems(bucketQuery, false)
 		}
 
-		bucket = ""
+		bucketQuery = ""
 	}
 }
 
-func (m *manager) updateLoc(bucket string, goBack bool) string {
+func parseBucket(query string) string {
+	split := strings.Split(query, " ")
+	if len(split) >= 2 {
+		return split[1]
+	}
+
+	return ""
+}
+
+func (m *manager) updateLoc(bucketQuery string, goBack bool) string {
+	bucket := parseBucket(bucketQuery)
+	if bucket == "" {
+		// log.Fatal(color.RedString("invalid query - second argument must be the name of a bucket"))
+		color.Red("invalid query - second argument must be the name of a bucket")
+		m.bucketlist()
+		return ""
+	}
+
 	if bucket == m.lastLoc {
 		m.currentLoc = bucket
-		return m.currentLoc
+		return bucketQuery
 	}
 
 	if goBack {
 		s := strings.Split(m.currentLoc, ">>")
 		m.currentLoc = strings.Join(s[:len(s)-1], ">>")
 		m.bucket = strings.Trim(s[len(s)-2], " ")
-		return m.currentLoc
+		return bucketQuery
 	}
 
 	if m.currentLoc == "" {
@@ -119,10 +226,11 @@ func (m *manager) updateLoc(bucket string, goBack bool) string {
 		m.bucket = bucket
 	}
 
-	return m.currentLoc
+	return bucketQuery
 }
 
 func (m *manager) bucketlist() {
+	color.Yellow("ROOT BUCKET")
 	m.rootBucket = true
 	m.currentLoc = ""
 
@@ -136,22 +244,21 @@ func (m *manager) bucketlist() {
 		buckets = append(buckets, bucket{Name: string(k) + "*"})
 	}
 
-	fmt.Fprint(os.Stdout, "DB Layout:\n\n")
 	m.viewer.DumpBuckets(os.Stdout, buckets)
-	printHelpText()
+	printRunQuery()
 }
 
-func (m *manager) bucketItems(bucketName string, goBack bool) {
+func (m *manager) bucketItems(bucketQuery string, goBack bool) {
 	items := []item{}
-	getQuery := m.updateLoc(bucketName, goBack)
-	if getQuery != "" {
-		fmt.Fprintf(os.Stdout, "Query: "+getQuery+"\n\n")
-		res, err := kval.Query(m.kb, "GET "+getQuery)
+	dbQuery := m.updateLoc(bucketQuery, goBack)
+	if dbQuery != "" {
+		color.Green("\n[RUNNING]: %s\n", dbQuery)
+		res, err := kval.Query(m.kb, dbQuery)
 		if err != nil {
 			if err.Error() != "Cannot GOTO bucket, bucket not found" {
-				log.Fatal(err)
+				log.Fatal(color.RedString(fmt.Sprintf("%v", err)))
 			} else {
-				fmt.Fprintf(os.Stdout, "> Bucket not found\n")
+				fmt.Fprintf(os.Stdout, color.RedString("> Bucket not found\n"))
 				if m.rootBucket == true {
 					m.bucketlist()
 					return
@@ -159,10 +266,21 @@ func (m *manager) bucketItems(bucketName string, goBack bool) {
 				m.bucketItems(m.currentLoc, true)
 			}
 		}
+
 		if len(res.Result) == 0 {
-			fmt.Fprintf(os.Stdout, "Invalid request.\n\n")
-			m.bucketItems(m.lastLoc, false)
-			return
+			if !res.Exists {
+				fmt.Fprintf(os.Stdout, color.RedString("No results found\n\n"))
+				m.bucketItems(m.lastLoc, false)
+				return
+			}
+
+			// checks if it exists
+			if getQueryKeyword(bucketQuery) == "LIS" {
+				color.Yellow("\n%s EXISTS\n", m.bucket)
+				fmt.Fprintf(os.Stdout, fmt.Sprintf("\n%s\nKEYS IN BUCKET:%d\nB+ TREE DEPTH: %d\nINLINE BUCKETS: %d\n\n", color.HiBlueString("STATS"), res.Stats.KeyN, res.Stats.Depth, res.Stats.InlineBucketN))
+				m.bucketlist()
+				return
+			}
 		}
 
 		for k, v := range res.Result {
@@ -170,14 +288,19 @@ func (m *manager) bucketItems(bucketName string, goBack bool) {
 				k = k + "*"
 				v = ""
 			}
-			items = append(items, item{Key: string(k), Value: string(v)})
+
+			items = append(items, item{Key: strings.TrimSpace(string(k)), Value: strings.TrimSpace(string(v))})
 		}
-		fmt.Fprintf(os.Stdout, "Bucket: %s\n", bucketName)
+
 		m.viewer.DumpBucketItems(os.Stdout, m.bucket, items)
 		m.rootBucket = false // success this far means we're not at ROOT
-		m.lastLoc = getQuery // so we can also set the query cache for paging
+		m.lastLoc = dbQuery  // so we can also set the query cache for paging
 		printHelpText()
 	}
+}
+
+func getQueryKeyword(query string) string {
+	return strings.Split(query, " ")[0]
 }
 
 // connect establishes a connection with the bolt DB file
@@ -204,14 +327,25 @@ func (d dbDisplay) DumpBuckets(w io.Writer, bs []bucket) {
 }
 
 func (d dbDisplay) DumpBucketItems(w io.Writer, bucket string, items []item) {
+	color.Yellow("[BUCKET]: %s", bucket)
+	color.HiBlue("# OF RESULTS FOUND: %d", len(items))
 	t := tablewriter.NewWriter(w)
 	t.SetHeader([]string{"Key", "Value"})
-	color.HiBlue("# of items: %d", len(items))
 	for _, i := range items {
-		row := []string{i.Key, i.Value}
+		row := []string{i.Key, fmt.Sprintf("%v", i.Value)}
 		t.Append(row)
 	}
 
 	t.SetAutoWrapText(true)
 	t.Render()
+}
+
+func pauseAndFormat(longPause bool) {
+	duration := time.Duration(2)
+	if longPause {
+		duration = time.Duration(4)
+	}
+	unit := time.Second
+	fmt.Println()
+	time.Sleep(duration * unit)
 }

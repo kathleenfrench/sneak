@@ -27,8 +27,8 @@ var difficulties = []string{
 }
 
 // PromptUserForBoxData prompts the user for values about the htb machine they want to add
-func PromptUserForBoxData() (*Box, error) {
-	box := &Box{
+func PromptUserForBoxData() (Box, error) {
+	box := Box{
 		Name:       gui.InputPromptWithResponse("what is the name of the box?", "", true),
 		IP:         gui.InputPromptWithResponse("what is its IP?", "", true),
 		Completed:  false,

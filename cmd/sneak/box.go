@@ -17,9 +17,9 @@ var boxSubCmd = &cobra.Command{
 }
 
 var newBoxCmd = &cobra.Command{
-	Use:     "add",
+	Use:     "new",
 	Short:   "add a new box",
-	Aliases: []string{"new", "a"},
+	Aliases: []string{"add", "a"},
 	Run: func(cmd *cobra.Command, args []string) {
 		box, err := htb.PromptUserForBoxData()
 		if err != nil {
