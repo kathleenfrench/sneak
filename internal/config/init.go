@@ -5,6 +5,7 @@ import (
 	"os"
 	"path"
 
+	"github.com/fatih/color"
 	"github.com/kathleenfrench/common/fs"
 	"github.com/kathleenfrench/common/gui"
 	homedir "github.com/mitchellh/go-homedir"
@@ -71,13 +72,24 @@ func SafeWriteConfig() error {
 	// set defaults
 	htbUsername := gui.InputPromptWithResponse("what is your hack the box username?", "", true)
 	viper.Set("htb_username", htbUsername)
-	exampleBoxIPMap := map[string]string{"example": "10.10.10.XXX"}
-	viper.Set("box_ips", exampleBoxIPMap)
 	viper.Set("openvpn_filepath", fmt.Sprintf("%s/%s.ovpn", dir, viper.Get("htb_username")))
 	preferredEditor := gui.GetUsersPreferredEditor("", true)
 	viper.Set("default_editor", preferredEditor)
+	viper.Set("data", dir)
 
 	// write config file
 	gui.Info("popcorn", "writing sneak defaults...", filepath)
 	return viper.WriteConfigAs(filepath)
 }
+
+// Banner is the banner for sneak
+var Banner = color.RedString(`
+
+   ▄▄▄▄▄    ▄   ▄███▄   ██   █  █▀ 
+  █     ▀▄   █  █▀   ▀  █ █  █▄█   
+▄  ▀▀▀▀▄ ██   █ ██▄▄    █▄▄█ █▀▄   
+ ▀▄▄▄▄▀  █ █  █ █▄   ▄▀ █  █ █  █  
+         █  █ █ ▀███▀      █   █   
+         █   ██           █   ▀    
+                         ▀         														
+`)

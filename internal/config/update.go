@@ -1,15 +1,12 @@
 package config
 
 import (
-	"errors"
 	"fmt"
 	"path/filepath"
 	"reflect"
 	"strings"
 
-	"github.com/asaskevich/govalidator"
 	"github.com/fatih/color"
-	"github.com/kathleenfrench/common/extract"
 	"github.com/kathleenfrench/common/gui"
 	"github.com/spf13/viper"
 )
@@ -20,10 +17,6 @@ func (s *Settings) UpdateSettings() error {
 
 	if s.HTBUsername != "" {
 		s.viper.Set("htb_username", strings.TrimSpace(s.HTBUsername))
-	}
-
-	if s.BoxIPs != nil {
-		s.viper.Set("box_ips", s.BoxIPs)
 	}
 
 	if s.OpenVPNFilepath != "" {
@@ -81,34 +74,34 @@ func UpdateSettingsPrompt(viperSettings map[string]interface{}) error {
 	default:
 		// prompt for changing one of the existing settings as a map/map interface, etc.
 		switch choice {
-		case "box_ips":
-			ips := make(map[string]string)
-			err := viper.UnmarshalKey(choice, &ips)
-			if err != nil {
-				return err
-			}
+		// case "box_ips":
+		// 	ips := make(map[string]string)
+		// 	err := viper.UnmarshalKey(choice, &ips)
+		// 	if err != nil {
+		// 		return err
+		// 	}
 
-			var newIP string
-			editExisting := gui.ConfirmPrompt("do you want to modify an existing IP?", "", false, true)
-			if editExisting {
-				shortKeys := extract.KeysFromMapString(ips)
-				editWhich := gui.SelectPromptWithResponse("which do you want to change?", shortKeys, nil, false)
-				newIP = gui.InputPromptWithResponse(fmt.Sprintf("what do you want to change %s to?", editWhich), "", true)
-				choice = fmt.Sprintf("box_ips.%s", editWhich)
-			} else {
-				// add new box IP
-				boxName := gui.InputPromptWithResponse("what is the name of the new box?", "", false)
-				ip := gui.InputPromptWithResponse(fmt.Sprintf("what is the IP for %s?", boxName), "", false)
-				choice = fmt.Sprintf("box_ips.%s", boxName)
-				newIP = ip
-			}
+		// 	var newIP string
+		// 	editExisting := gui.ConfirmPrompt("do you want to modify an existing IP?", "", false, true)
+		// 	if editExisting {
+		// 		shortKeys := extract.KeysFromMapString(ips)
+		// 		editWhich := gui.SelectPromptWithResponse("which do you want to change?", shortKeys, nil, false)
+		// 		newIP = gui.InputPromptWithResponse(fmt.Sprintf("what do you want to change %s to?", editWhich), "", true)
+		// 		choice = fmt.Sprintf("box_ips.%s", editWhich)
+		// 	} else {
+		// 		// add new box IP
+		// 		boxName := gui.InputPromptWithResponse("what is the name of the new box?", "", false)
+		// 		ip := gui.InputPromptWithResponse(fmt.Sprintf("what is the IP for %s?", boxName), "", false)
+		// 		choice = fmt.Sprintf("box_ips.%s", boxName)
+		// 		newIP = ip
+		// 	}
 
-			if !govalidator.IsIP(newIP) {
-				badIPErr := fmt.Sprintf("%s is not a valid IP!", newIP)
-				gui.ExitWithError(errors.New(badIPErr))
-			}
+		// 	if !govalidator.IsIP(newIP) {
+		// 		badIPErr := fmt.Sprintf("%s is not a valid IP!", newIP)
+		// 		gui.ExitWithError(errors.New(badIPErr))
+		// 	}
 
-			changedValue = newIP
+		// 	changedValue = newIP
 		}
 	}
 
