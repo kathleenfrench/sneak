@@ -2,34 +2,24 @@ package store
 
 import (
 	"fmt"
-	"time"
 
-	"github.com/timshannon/bolthold"
-	"go.etcd.io/bbolt"
+	"github.com/kathleenfrench/common/fs"
+	"github.com/mitchellh/go-homedir"
 )
 
-// Config represent config values for the bolt db
-type Config struct {
-	FileName string
-	Path     string
-}
-
-func (c *Config) constructFullPath() string {
-	return fmt.Sprintf("%s/%s", c.Path, c.FileName)
-}
-
-// NewDB initializes a new DB
-func NewDB(c *Config) (*bolthold.Store, error) {
-	opts := &bolthold.Options{
-		Options: &bbolt.Options{
-			Timeout: 5 * time.Second,
-		},
-	}
-
-	db, err := bolthold.Open(c.constructFullPath(), 0600, opts)
+// GetDataDirectory parses the path to .sneak's expected data directory, checks if the directory exists, attempts to create it if it does not, then returns the path
+func GetDataDirectory() (string, error) {
+	home, err := homedir.Dir()
 	if err != nil {
-		return db, err
+		return home, err
 	}
 
-	return db, nil
+	dir := fmt.Sprintf("%s/.sneak", home)
+
+	err = fs.CreateDir(dir)
+	if err != nil {
+		return dir, err
+	}
+
+	return dir, nil
 }

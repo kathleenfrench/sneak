@@ -14,6 +14,8 @@ import (
 // Version is a value injected at compile time for the current version of sneak
 var Version = "master"
 
+var testing string
+
 // local
 var (
 	// sneakCfg are the struct representation of sneak settings
@@ -43,22 +45,26 @@ var rootCmd = &cobra.Command{
 		if err != nil {
 			gui.ExitWithError(err)
 		}
-
-		dbc := &store.Config{
-			FileName: "sneak.db",
-			Path:     sneakCfg.DBPath,
-		}
-
-		db, err = store.NewDB(dbc)
-		if err != nil {
-			gui.ExitWithError(fmt.Sprintf("could not initialize the sneak db - %s", err))
-		}
 	},
 }
 
 // Execute adds all child commands to the root command set sets flags appropriately
 func Execute() {
-	if err := rootCmd.Execute(); err != nil {
+	var err error
+
+	dataDir, err = store.GetDataDirectory()
+	if err != nil {
+		gui.ExitWithError(err)
+	}
+
+	db, err = bolthold.Open(fmt.Sprintf("%s/sneak.db", dataDir), 0600, nil)
+	if err != nil {
+		gui.ExitWithError(fmt.Sprintf("could not initialize database - %s", err))
+	}
+
+	defer db.Close()
+
+	if err = rootCmd.Execute(); err != nil {
 		gui.ExitWithError(err)
 	}
 }
