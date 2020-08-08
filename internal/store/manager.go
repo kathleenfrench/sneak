@@ -10,7 +10,6 @@ import (
 	"log"
 	"os"
 	"strings"
-	"time"
 
 	"github.com/davecgh/go-spew/spew"
 	"github.com/fatih/color"
@@ -94,7 +93,7 @@ Rename B:                                       REN A >>>> B => C
 `
 
 func printRunQuery() {
-	fmt.Fprintf(os.Stdout, "\n%s\n\n", color.YellowString("> Run a query"))
+	fmt.Fprintf(os.Stdout, "\n%s\n\n", color.YellowString("> Enter bucket name"))
 }
 
 func printHelpText() {
@@ -164,9 +163,9 @@ func (m *manager) readInput() {
 	m.bucketlist()
 	s := bufio.NewScanner(os.Stdin)
 	for s.Scan() {
-		bucketQuery := s.Text()
+		bucket := s.Text()
 		fmt.Fprintln(os.Stdout, "")
-		switch bucketQuery {
+		switch bucket {
 		case ":q", "\x18":
 			color.HiCyan("exiting...")
 			os.Exit(0)
@@ -176,7 +175,7 @@ func (m *manager) readInput() {
 				m.currentLoc = ""
 				m.bucketlist()
 			} else {
-				m.bucketItems(bucketQuery, true)
+				m.bucketItems(bucket, true)
 			}
 		case ":help":
 			printKvalHelpText()
@@ -185,10 +184,10 @@ func (m *manager) readInput() {
 		case "":
 			m.bucketlist()
 		default:
-			m.bucketItems(bucketQuery, false)
+			m.bucketItems(bucket, false)
 		}
 
-		bucketQuery = ""
+		bucket = ""
 	}
 }
 
@@ -201,25 +200,25 @@ func parseBucket(query string) string {
 	return ""
 }
 
-func (m *manager) updateLoc(bucketQuery string, goBack bool) string {
-	bucket := parseBucket(bucketQuery)
-	if bucket == "" {
-		// log.Fatal(color.RedString("invalid query - second argument must be the name of a bucket"))
-		color.Red("invalid query - second argument must be the name of a bucket")
-		m.bucketlist()
-		return ""
-	}
+func (m *manager) updateLoc(bucket string, goBack bool) string {
+	// bucket := parseBucket(bucketQuery)
+	// if bucket == "" {
+	// 	// log.Fatal(color.RedString("invalid query - second argument must be the name of a bucket"))
+	// 	color.Red("invalid query - second argument must be the name of a bucket")
+	// 	m.bucketlist()
+	// 	return ""
+	// }
 
 	if bucket == m.lastLoc {
 		m.currentLoc = bucket
-		return bucketQuery
+		return bucket
 	}
 
 	if goBack {
 		s := strings.Split(m.currentLoc, ">>")
 		m.currentLoc = strings.Join(s[:len(s)-1], ">>")
 		m.bucket = strings.Trim(s[len(s)-2], " ")
-		return bucketQuery
+		return m.bucket
 	}
 
 	if m.currentLoc == "" {
@@ -230,7 +229,7 @@ func (m *manager) updateLoc(bucketQuery string, goBack bool) string {
 		m.bucket = bucket
 	}
 
-	return bucketQuery
+	return m.currentLoc
 }
 
 func (m *manager) bucketlist() {
@@ -252,10 +251,11 @@ func (m *manager) bucketlist() {
 	printRunQuery()
 }
 
-func (m *manager) bucketItems(bucketQuery string, goBack bool) {
+func (m *manager) bucketItems(bucket string, goBack bool) {
 	items := []item{}
-	dbQuery := m.updateLoc(bucketQuery, goBack)
+	dbQuery := m.updateLoc(bucket, goBack)
 	if dbQuery != "" {
+		dbQuery := fmt.Sprintf("GET %s", bucket)
 		color.Green("\n[RUNNING]: %s\n", dbQuery)
 		res, err := kval.Query(m.kb, dbQuery)
 		if err != nil {
@@ -274,19 +274,21 @@ func (m *manager) bucketItems(bucketQuery string, goBack bool) {
 		color.HiBlue("# OF RESULTS FOUND: %d", len(res.Result))
 
 		if len(res.Result) == 0 {
-			if !res.Exists {
-				fmt.Fprintf(os.Stdout, color.RedString("No results found\n\n"))
-				m.bucketItems(m.lastLoc, false)
-				return
-			}
-
+			// if !res.Exists {
+			// 	fmt.Fprintf(os.Stdout, color.RedString("No results found\n\n"))
+			// 	m.bucketItems(m.lastLoc, false)
+			// 	return
+			// }
+			fmt.Fprintf(os.Stdout, color.RedString("No results found\n\n"))
+			m.bucketItems(m.lastLoc, false)
+			return
 			// checks if it exists
-			if getQueryKeyword(bucketQuery) == "LIS" {
-				color.Yellow("\n%s EXISTS\n", m.bucket)
-				fmt.Fprintf(os.Stdout, fmt.Sprintf("\n%s\nKEYS IN BUCKET:%d\nB+ TREE DEPTH: %d\nINLINE BUCKETS: %d\n\n", color.HiBlueString("STATS"), res.Stats.KeyN, res.Stats.Depth, res.Stats.InlineBucketN))
-				m.bucketlist()
-				return
-			}
+			// if getQueryKeyword(bucket) == "LIS" {
+			// 	color.Yellow("\n%s EXISTS\n", m.bucket)
+			// 	fmt.Fprintf(os.Stdout, fmt.Sprintf("\n%s\nKEYS IN BUCKET:%d\nB+ TREE DEPTH: %d\nINLINE BUCKETS: %d\n\n", color.HiBlueString("STATS"), res.Stats.KeyN, res.Stats.Depth, res.Stats.InlineBucketN))
+			// 	m.bucketlist()
+			// 	return
+			// }
 		}
 
 		fmt.Fprintf(os.Stdout, fmt.Sprintf("\n%s\nKEYS IN BUCKET:%d\nB+ TREE DEPTH: %d\nINLINE BUCKETS: %d\n\n", color.HiBlueString("STATS"), res.Stats.KeyN, res.Stats.Depth, res.Stats.InlineBucketN))
@@ -313,9 +315,9 @@ func (m *manager) bucketItems(bucketQuery string, goBack bool) {
 	}
 }
 
-func getQueryKeyword(query string) string {
-	return strings.Split(query, " ")[0]
-}
+// func getQueryKeyword(query string) string {
+// 	return strings.Split(query, " ")[0]
+// }
 
 // connect establishes a connection with the bolt DB file
 func (m *manager) connect(file string) {
@@ -345,10 +347,6 @@ func (d dbDisplay) DumpBucketItems(w io.Writer, bucket string, items []item) {
 	t := tablewriter.NewWriter(w)
 	t.SetHeader([]string{"Key", "Value"})
 	for _, i := range items {
-		if i.Value == "" {
-			return
-		}
-
 		row := []string{}
 		if i.Nested {
 			row = append(row, i.Key, "")
@@ -365,14 +363,4 @@ func (d dbDisplay) DumpBucketItems(w io.Writer, bucket string, items []item) {
 
 	t.SetAutoWrapText(true)
 	t.Render()
-}
-
-func pauseAndFormat(longPause bool) {
-	duration := time.Duration(2)
-	if longPause {
-		duration = time.Duration(4)
-	}
-	unit := time.Second
-	fmt.Println()
-	time.Sleep(duration * unit)
 }
