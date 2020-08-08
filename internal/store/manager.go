@@ -22,8 +22,9 @@ import (
 // h/t: https://github.com/hasit/bolter
 
 var helpText = `<CONTROLS>
-[:q/CTRL+C to exit] [:b to go back] [:help for query help] 
-[:examples for more query examples] [ENTER to return to root bucket]
+[:q/CTRL+C to exit] [:b to go back]
+[:help for query help] 
+[ENTER to return to root bucket]
 `
 
 const kvalHelpText = `
@@ -51,47 +52,6 @@ Must be >= 1 Buckets for data.
 {PAT} is not a valid option for an INS query.
 `
 
-const kvalExamples = `
-<INSERTS AND GETS>
-
-INS Prime Bucket >> Secondary Bucket >> Tertiary Bucket >>>> Key :: Value
-INS Prime Bucket >> Secondary Bucket >> Tertiary Bucket
-GET Prime Bucket >> Secondary Bucket >> Tertiary Bucket >>>> Key :: Value
-GET Prime Bucket >> Secondary Bucket >> Tertiary Bucket >>>> Key
-GET Prime Bucket >> Secondary Bucket >> Tertiary Bucket
-GET Prime Bucket >> Secondary Bucket >> Tertiary Bucket >>>> {PAT}
-GET Prime Bucket >> Secondary Bucket >> Tertiary Bucket >>>> _ :: Value
-GET Prime Bucket >> Secondary Bucket >> Tertiary Bucket >>>> _ :: {PAT}
-LIS Prime Bucket >> Secondary Bucket >> Tertiary Bucket >>>> Key
-LIS Prime Bucket >> Secondary Bucket >> Tertiary Bucket 
-DEL Prime Bucket >> Secondary Bucket >> Tertiary Bucket
-DEL Prime Bucket >> Secondary Bucket >> Tertiary Bucket >>>> Key
-DEL Prime Bucket >> Secondary Bucket >> Tertiary Bucket >>>> Key :: _
-DEL Prime Bucket >> Secondary Bucket >> Tertiary Bucket >>>> _      
-REN Prime Bucket >> Secondary Bucket >> Tertiary Bucket >>>> Key => Key
-REN Prime Bucket >> Secondary Bucket >> Tertiary Bucket => Third Bucket
-GET _
-
-<OPERATIONS>
-Bucket B exists inside Bucket A:                A >> B  
-Check existence of Bucket B inside Bucket A:    LIS A >> B              [Return: True]
-Get key value pairs in B:                       GET A >> B
-Get Root Bucket Contents                     GET _
-
-Key K1 exists inside Bucket A:                  A >>>> K1
-Check K1 exists inside Bucket A:                LIS A >>>> K1
-Get value for K1:                               GET A >>>> K1
-Add value for K1:                               INS A >>>> K1 :: V1
-Delete K1 value:                                DEL A >>>> K1 :: _
-Delete Values for Keys in Bucket A              DEL A >>>> _
-
-Delete A:                                       DEL A
-Delete B:                                       DEL A >> B
-
-Rename K1:                                      REN A >>>> K1 => K2
-Rename B:                                       REN A >>>> B => C
-`
-
 func printRunQuery() {
 	fmt.Fprintf(os.Stdout, "\n%s\n\n", color.YellowString("> Enter bucket name"))
 }
@@ -103,12 +63,6 @@ func printHelpText() {
 func printKvalHelpText() {
 	color.HiBlue("KVAL (Key Value Access Language) - see full specs at: https://github.com/kval-access-language/kval-language-specification")
 	fmt.Fprintf(os.Stdout, "%s\n", kvalHelpText)
-	printRunQuery()
-}
-
-func printKvalExamplesText() {
-	color.HiBlue("QUERY EXAMPLES")
-	fmt.Fprintf(os.Stdout, "%s\n", kvalExamples)
 	printRunQuery()
 }
 
@@ -168,7 +122,7 @@ func (m *manager) readInput() {
 		switch bucket {
 		case ":q", "\x18":
 			color.HiCyan("exiting...")
-			os.Exit(0)
+			return
 		case ":b":
 			if !strings.Contains(m.currentLoc, "") || !strings.Contains(m.currentLoc, ">>") {
 				fmt.Fprintf(os.Stdout, "%s\n", "> going back...")
@@ -179,8 +133,6 @@ func (m *manager) readInput() {
 			}
 		case ":help":
 			printKvalHelpText()
-		case ":examples":
-			printKvalExamplesText()
 		case "":
 			m.bucketlist()
 		default:
@@ -201,14 +153,6 @@ func parseBucket(query string) string {
 }
 
 func (m *manager) updateLoc(bucket string, goBack bool) string {
-	// bucket := parseBucket(bucketQuery)
-	// if bucket == "" {
-	// 	// log.Fatal(color.RedString("invalid query - second argument must be the name of a bucket"))
-	// 	color.Red("invalid query - second argument must be the name of a bucket")
-	// 	m.bucketlist()
-	// 	return ""
-	// }
-
 	if bucket == m.lastLoc {
 		m.currentLoc = bucket
 		return bucket
@@ -218,7 +162,7 @@ func (m *manager) updateLoc(bucket string, goBack bool) string {
 		s := strings.Split(m.currentLoc, ">>")
 		m.currentLoc = strings.Join(s[:len(s)-1], ">>")
 		m.bucket = strings.Trim(s[len(s)-2], " ")
-		return m.bucket
+		return m.currentLoc
 	}
 
 	if m.currentLoc == "" {
@@ -243,6 +187,7 @@ func (m *manager) bucketlist() {
 	if err != nil {
 		panic(err)
 	}
+
 	for k := range res.Result {
 		buckets = append(buckets, bucket{Name: string(k) + "*"})
 	}
@@ -257,6 +202,7 @@ func (m *manager) bucketItems(bucket string, goBack bool) {
 	if dbQuery != "" {
 		dbQuery := fmt.Sprintf("GET %s", bucket)
 		color.Green("\n[RUNNING]: %s\n", dbQuery)
+
 		res, err := kval.Query(m.kb, dbQuery)
 		if err != nil {
 			if err.Error() != "Cannot GOTO bucket, bucket not found" {
@@ -274,21 +220,9 @@ func (m *manager) bucketItems(bucket string, goBack bool) {
 		color.HiBlue("# OF RESULTS FOUND: %d", len(res.Result))
 
 		if len(res.Result) == 0 {
-			// if !res.Exists {
-			// 	fmt.Fprintf(os.Stdout, color.RedString("No results found\n\n"))
-			// 	m.bucketItems(m.lastLoc, false)
-			// 	return
-			// }
 			fmt.Fprintf(os.Stdout, color.RedString("No results found\n\n"))
 			m.bucketItems(m.lastLoc, false)
 			return
-			// checks if it exists
-			// if getQueryKeyword(bucket) == "LIS" {
-			// 	color.Yellow("\n%s EXISTS\n", m.bucket)
-			// 	fmt.Fprintf(os.Stdout, fmt.Sprintf("\n%s\nKEYS IN BUCKET:%d\nB+ TREE DEPTH: %d\nINLINE BUCKETS: %d\n\n", color.HiBlueString("STATS"), res.Stats.KeyN, res.Stats.Depth, res.Stats.InlineBucketN))
-			// 	m.bucketlist()
-			// 	return
-			// }
 		}
 
 		fmt.Fprintf(os.Stdout, fmt.Sprintf("\n%s\nKEYS IN BUCKET:%d\nB+ TREE DEPTH: %d\nINLINE BUCKETS: %d\n\n", color.HiBlueString("STATS"), res.Stats.KeyN, res.Stats.Depth, res.Stats.InlineBucketN))
@@ -314,10 +248,6 @@ func (m *manager) bucketItems(bucket string, goBack bool) {
 		printHelpText()
 	}
 }
-
-// func getQueryKeyword(query string) string {
-// 	return strings.Split(query, " ")[0]
-// }
 
 // connect establishes a connection with the bolt DB file
 func (m *manager) connect(file string) {
