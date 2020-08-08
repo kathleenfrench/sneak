@@ -18,6 +18,7 @@ require (
 	github.com/spf13/viper v1.7.1
 	github.com/stretchr/objx v0.3.0 // indirect
 	github.com/stretchr/testify v1.6.1 // indirect
+	github.com/timshannon/bolthold v0.0.0-20200721214230-3be86da07fdb // indirect
 	github.com/yuin/goldmark v1.2.1 // indirect
 	golang.org/x/crypto v0.0.0-20200728195943-123391ffb6de // indirect
 	golang.org/x/net v0.0.0-20200707034311-ab3426394381 // indirect
