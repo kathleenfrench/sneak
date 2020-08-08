@@ -62,6 +62,8 @@ func Execute() {
 		gui.ExitWithError(fmt.Sprintf("could not initialize database - %s", err))
 	}
 
+	store.InitDB(db)
+
 	defer db.Close()
 
 	if err = rootCmd.Execute(); err != nil {
