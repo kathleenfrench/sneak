@@ -30,17 +30,8 @@ func GetDataDirectory() (string, error) {
 	return dir, nil
 }
 
-// InitDB initializes the database
-func InitDB(db *bolthold.Store, resetAll bool, resetBucket string) {
-	if resetAll {
-		EmptyBuckets(db, "/all")
-	} else if resetBucket != "" {
-		EmptyBuckets(db, resetBucket)
-	}
-}
-
 var sneakBuckets = map[string]bool{
-	"Boxes": true,
+	"Box": true,
 }
 
 // Buckets returns all of the db buckets for sneak
@@ -52,7 +43,7 @@ func Buckets(db *bolthold.Store, name string) []string {
 	}
 
 	switch name {
-	case "Boxes":
+	case "Box":
 		buckets = append(buckets, strings.Join(new(htb.Box).List(db), "\n"))
 	default:
 		buckets = append(buckets, fmt.Sprintf("%s is not a valid bucket in sneak", name))

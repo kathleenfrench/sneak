@@ -39,20 +39,13 @@ var dbViewCmd = &cobra.Command{
 var dbResetCmd = &cobra.Command{
 	Use:     "reset",
 	Aliases: []string{"nuke", "clear"},
-	PreRun: func(cmd *cobra.Command, args []string) {
-		err := db.Close()
-		if err != nil {
-			gui.ExitWithError(err)
-		}
-	},
 	Run: func(cmd *cobra.Command, args []string) {
-		store.InitDB(db, true, resetBucket)
-		defer db.Close()
-
 		helpers.Spacer()
 		if resetBucket != "" {
+			store.EmptyBuckets(db, resetBucket)
 			gui.Info("fire", "bucket emptied", resetBucket)
 		} else {
+			store.EmptyBuckets(db, "/all")
 			gui.Info("fire", "your local DB has been wiped", "bolt")
 		}
 	},

@@ -38,7 +38,6 @@ var listBoxesCmd = &cobra.Command{
 	Short:   "list all of your boxes",
 	Aliases: []string{"ls"},
 	Run: func(cmd *cobra.Command, args []string) {
-		color.Red("TODO")
 		boxes, err := htb.GetAllBoxes(db)
 		if err != nil {
 			gui.ExitWithError(err)
