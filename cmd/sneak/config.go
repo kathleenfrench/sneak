@@ -56,7 +56,6 @@ var configSetCmd = &cobra.Command{
 		val := args[1]
 
 		keys := viper.AllKeys()
-		// filter out: useviper, cfg_dir
 		settings := viper.AllSettings()
 
 		var toChange interface{}

@@ -1,6 +1,8 @@
 package sneak
 
 import (
+	"fmt"
+
 	"github.com/kathleenfrench/common/gui"
 	"github.com/kathleenfrench/sneak/internal/config"
 	"github.com/spf13/cobra"
@@ -16,6 +18,8 @@ var (
 	sneakCfg config.Settings
 	// cfgfile is the path to the sneak config file different than the default
 	cfgFile string
+	// dataDir is the path where sneak stores its key/value database
+	dataDir string
 )
 
 var rootCmd = &cobra.Command{
@@ -25,6 +29,8 @@ var rootCmd = &cobra.Command{
 		cmd.Usage()
 	},
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+		fmt.Println(config.Banner)
+
 		err := config.SafeWriteConfig()
 		if err != nil {
 			gui.ExitWithError(err)
@@ -50,9 +56,11 @@ func Execute() {
 // -------------------- init
 
 func initGlobalFlags() {
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.config/sneak/config.yaml)")
+	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.sneak/.sneak.yaml)")
 	rootCmd.PersistentFlags().Bool("viper", true, "use viper for configuration")
 	viper.BindPFlag("useViper", rootCmd.PersistentFlags().Lookup("viper"))
+	rootCmd.PersistentFlags().StringVar(&dataDir, "data", "", "database dir default is $HOME/.sneak")
+	viper.BindPFlag("data", rootCmd.PersistentFlags().Lookup("data"))
 }
 
 func init() {

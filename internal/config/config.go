@@ -8,10 +8,10 @@ import (
 // Settings represent the sneak configs
 type Settings struct {
 	viper           *viper.Viper
-	OpenVPNFilepath string            `yaml:"openvpn_filepath"`
-	HTBUsername     string            `yaml:"htb_username"`
-	BoxIPs          map[string]string `yaml:"box_ips"`
-	DefaultEditor   string            `yaml:"default_editor"`
+	OpenVPNFilepath string `yaml:"openvpn_filepath"`
+	HTBUsername     string `yaml:"htb_username"`
+	DefaultEditor   string `yaml:"default_editor"`
+	DBPath          string `yaml:"data"`
 }
 
 // Parse unmarshals the viper configs into the sneak settings struct
