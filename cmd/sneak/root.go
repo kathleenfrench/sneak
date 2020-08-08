@@ -50,25 +50,6 @@ var rootCmd = &cobra.Command{
 	},
 }
 
-var dbCmd = &cobra.Command{
-	Use:    "db",
-	Short:  "admin view of db",
-	Hidden: true,
-	PreRun: func(cmd *cobra.Command, args []string) {
-		err := db.Close()
-		if err != nil {
-			gui.ExitWithError(err)
-		}
-	},
-	Run: func(cmd *cobra.Command, args []string) {
-		dbPath := fmt.Sprintf("%s/sneak.db", viper.GetString("data"))
-		err := store.Audit(dbPath)
-		if err != nil {
-			gui.ExitWithError(err)
-		}
-	},
-}
-
 // Execute adds all child commands to the root command set sets flags appropriately
 func Execute() {
 	var err error
@@ -89,8 +70,7 @@ func Execute() {
 		gui.ExitWithError(fmt.Sprintf("could not initialize database - %s", err))
 	}
 
-	store.InitDB(db)
-
+	store.InitDB(db, false, "")
 	defer db.Close()
 
 	if err = rootCmd.Execute(); err != nil {
@@ -119,4 +99,6 @@ func init() {
 
 	rootCmd.AddCommand(configCmd)
 	rootCmd.AddCommand(dbCmd)
+	rootCmd.AddCommand(boxSubCmd)
+	rootCmd.AddCommand(gotoCmd)
 }

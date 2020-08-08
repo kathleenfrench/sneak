@@ -10,9 +10,16 @@ import (
 
 	"github.com/fatih/color"
 	"github.com/kathleenfrench/common/fs"
+	"github.com/kathleenfrench/sneak/pkg/htb"
 	kval "github.com/kval-access-language/kval-boltdb"
 	"github.com/olekukonko/tablewriter"
 )
+
+const helpText = "> Type bucket name to explore [quit: :q/CTRL+C] [go back: :b] [return to root bucket: ENTER]"
+
+func printHelpText() {
+	fmt.Fprintf(os.Stdout, "\n%s\n\n", helpText)
+}
 
 type manager struct {
 	kb         kval.Kvalboltdb
@@ -33,6 +40,11 @@ type item struct {
 	Value string
 }
 
+type box struct {
+	Key   string
+	Value htb.Box
+}
+
 type bucket struct {
 	Name string
 }
@@ -40,9 +52,7 @@ type bucket struct {
 // Audit gives the ability to see what's happening in the DB
 func Audit(dbFilepath string) error {
 	color.HiBlue("db filepath: %s", dbFilepath)
-	var m manager
-
-	m = manager{
+	m := manager{
 		viewer: &dbDisplay{},
 	}
 
@@ -58,15 +68,19 @@ func Audit(dbFilepath string) error {
 }
 
 func (m *manager) readInput() {
+
 	m.bucketlist()
 	s := bufio.NewScanner(os.Stdin)
 	for s.Scan() {
 		bucket := s.Text()
 		fmt.Fprintln(os.Stdout, "")
 		switch bucket {
+		case ":q":
+			color.HiCyan("exiting...")
+			os.Exit(0)
 		case "\x18":
 			return
-		case "\x02":
+		case ":b":
 			if !strings.Contains(m.currentLoc, "") || !strings.Contains(m.currentLoc, ">>") {
 				fmt.Fprintf(os.Stdout, "%s\n", "> going back...")
 				m.currentLoc = ""
@@ -85,14 +99,11 @@ func (m *manager) readInput() {
 }
 
 func (m *manager) updateLoc(bucket string, goBack bool) string {
-	// we've probably an invalid value and want to display
-	// ourselves again...
 	if bucket == m.lastLoc {
 		m.currentLoc = bucket
 		return m.currentLoc
 	}
 
-	// handle goback
 	if goBack {
 		s := strings.Split(m.currentLoc, ">>")
 		m.currentLoc = strings.Join(s[:len(s)-1], ">>")
@@ -100,7 +111,6 @@ func (m *manager) updateLoc(bucket string, goBack bool) string {
 		return m.currentLoc
 	}
 
-	// handle location on merit...
 	if m.currentLoc == "" {
 		m.currentLoc = bucket
 		m.bucket = bucket
@@ -108,6 +118,7 @@ func (m *manager) updateLoc(bucket string, goBack bool) string {
 		m.currentLoc = m.currentLoc + " >> " + bucket
 		m.bucket = bucket
 	}
+
 	return m.currentLoc
 }
 
@@ -127,7 +138,7 @@ func (m *manager) bucketlist() {
 
 	fmt.Fprint(os.Stdout, "DB Layout:\n\n")
 	m.viewer.DumpBuckets(buckets)
-	fmt.Fprintf(os.Stdout, "\n%s\n\n", "> Enter bucket to explore (CTRL-X to quit, CTRL-B to go back, ENTER to go back to ROOT Bucket):")
+	printHelpText()
 }
 
 func (m *manager) bucketItems(bucketName string, goBack bool) {
@@ -165,7 +176,7 @@ func (m *manager) bucketItems(bucketName string, goBack bool) {
 		m.viewer.DumpBucketItems(m.bucket, items)
 		m.rootBucket = false // success this far means we're not at ROOT
 		m.lastLoc = getQuery // so we can also set the query cache for paging
-		fmt.Fprintf(os.Stdout, "\n%s\n\n", "> Enter bucket to explore (CTRL-X to quit, CTRL-B to go back, ENTER to go back to ROOT Bucket):")
+		printHelpText()
 	}
 }
 
@@ -183,21 +194,24 @@ type dbDisplay struct{}
 
 func (d dbDisplay) DumpBuckets(bs []bucket) {
 	t := tablewriter.NewWriter(os.Stdout)
-	t.SetHeader([]string{"buckets"})
+	t.SetHeader([]string{"Buckets"})
 	for _, bucket := range bs {
 		row := []string{bucket.Name}
 		t.Append(row)
 	}
+	t.SetAutoWrapText(true)
 	t.Render()
 }
 
 func (d dbDisplay) DumpBucketItems(bucket string, items []item) {
 	t := tablewriter.NewWriter(os.Stdout)
 	t.SetHeader([]string{"Key", "Value"})
+	color.HiBlue("# of items: %d", len(items))
 	for _, i := range items {
 		row := []string{i.Key, i.Value}
 		t.Append(row)
 	}
 
+	t.SetAutoWrapText(true)
 	t.Render()
 }

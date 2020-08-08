@@ -10,8 +10,7 @@ import (
 
 // Box represents a machine
 type Box struct {
-	ID          uint64
-	Name        string
+	Name        string `boldholdKey:"Name"`
 	IP          string
 	Completed   bool `boltholdIndex:"Completed"` // when root + user flags captured
 	Active      bool `boltholdIndex:"Active"`
@@ -37,32 +36,50 @@ func (bx *Box) bucketName() string {
 }
 
 // CreateBox inserts a new box into the db
-func (bx Box) CreateBox(db *bolthold.Store, box Box) error {
-	if err := db.Bolt().Update(func(tx *bbolt.Tx) error {
-		if box.Created.IsZero() {
-			box.Created = time.Now()
-			box.LastUpdated = box.Created
-		}
+func CreateBox(db *bolthold.Store, box Box) error {
+	if box.Created.IsZero() {
+		box.Created = time.Now()
+		box.LastUpdated = box.Created
+	}
 
-		if box.ID == 0 {
-			bucket := tx.Bucket([]byte(box.bucketName()))
-			box.ID, _ = bucket.NextSequence()
-			box.Created = time.Now()
-		} else {
-			box.LastUpdated = time.Now()
-		}
-
-		err := db.TxUpsert(tx, box.ID, box)
-		return err
-	}); err != nil {
+	err := db.Upsert(box.Name, box)
+	if err != nil {
 		return err
 	}
 
 	return nil
+	// if err := db.Bolt().Update(func(tx *bbolt.Tx) error {
+	// 	if box.Created.IsZero() {
+	// 		box.Created = time.Now()
+	// 		box.LastUpdated = box.Created
+	// 	}
+
+	// 	if box.ID != 0 {
+	// 		var incrErr error
+	// 		bucket := tx.Bucket([]byte(box.bucketName()))
+	// 		box.ID, incrErr = bucket.NextSequence()
+	// 		if incrErr != nil {
+	// 			gui.Warn(fmt.Sprintf("issue autoincrementing: %v", incrErr), nil)
+	// 		}
+
+	// 		box.Created = time.Now()
+	// 	} else {
+	// 		box.LastUpdated = time.Now()
+	// 	}
+
+	// 	color.HiGreen("next int: %d", box.ID)
+
+	// 	err := db.TxUpsert(tx, box.ID, box)
+	// 	return err
+	// }); err != nil {
+	// 	return err
+	// }
+
+	// return nil
 }
 
 // DeleteBox deletes a box
-func (bx Box) DeleteBox(db *bolthold.Store, boxID uint64) error {
+func DeleteBox(db *bolthold.Store, boxID uint64) error {
 	err := db.DeleteMatching(&Box{}, bolthold.Where(bolthold.Key).Eq(boxID))
 	if err != nil {
 		return err
@@ -72,7 +89,7 @@ func (bx Box) DeleteBox(db *bolthold.Store, boxID uint64) error {
 }
 
 // GetBoxByID gets a box by key
-func (bx Box) GetBoxByID(db *bolthold.Store, id uint64) (*Box, error) {
+func GetBoxByID(db *bolthold.Store, id uint64) (*Box, error) {
 	b := &Box{}
 	err := db.Get(id, b)
 	if err != nil {
@@ -83,7 +100,7 @@ func (bx Box) GetBoxByID(db *bolthold.Store, id uint64) (*Box, error) {
 }
 
 // GetBoxByName fetches a box by name
-func (bx Box) GetBoxByName(db *bolthold.Store, name string) (*Box, error) {
+func GetBoxByName(db *bolthold.Store, name string) (*Box, error) {
 	b := &Box{}
 	err := db.Find(&b, bolthold.Where("Name").Eq(name))
 	if err != nil {
@@ -93,15 +110,22 @@ func (bx Box) GetBoxByName(db *bolthold.Store, name string) (*Box, error) {
 	return b, nil
 }
 
-// GetBoxes fetches a collection of boxes based off a query
-func (bx Box) GetBoxes(db *bolthold.Store, query *bolthold.Query) ([]*Box, error) {
-	var boxes []*Box
+// QueryBoxes fetches a collection of boxes based off a query
+func QueryBoxes(db *bolthold.Store, query *bolthold.Query) ([]Box, error) {
+	var boxes []Box
 
 	err := db.Find(&boxes, query)
 	if err != nil {
 		return nil, err
 	}
 
+	return boxes, nil
+}
+
+// GetAllBoxes returns all boxes in the db
+func GetAllBoxes(db *bolthold.Store) ([]Box, error) {
+	boxes := []Box{}
+	db.Find(&boxes, bolthold.Where(bolthold.Key).Ne(""))
 	return boxes, nil
 }
 
@@ -124,10 +148,10 @@ func (bx Box) List(db *bolthold.Store) []string {
 }
 
 // AddBoxes batch inserts boxes to the database
-func (bx Box) AddBoxes(db *bolthold.Store, boxes []*Box) error {
+func AddBoxes(db *bolthold.Store, boxes []*Box) error {
 	return db.Bolt().Update(func(tx *bbolt.Tx) error {
 		for i := range boxes {
-			err := db.TxInsert(tx, boxes[i].ID, boxes[i])
+			err := db.TxInsert(tx, boxes[i].Name, boxes[i])
 			if err != nil {
 				return err
 			}

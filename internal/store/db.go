@@ -29,8 +29,12 @@ func GetDataDirectory() (string, error) {
 }
 
 // InitDB initializes the database
-func InitDB(db *bolthold.Store) {
-	EmptyBuckets(db, "/all")
+func InitDB(db *bolthold.Store, resetAll bool, resetBucket string) {
+	if resetAll {
+		EmptyBuckets(db, "/all")
+	} else if resetBucket != "" {
+		EmptyBuckets(db, resetBucket)
+	}
 }
 
 var sneakBuckets = map[string]bool{
