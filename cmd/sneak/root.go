@@ -17,7 +17,7 @@ var Version = "master"
 // local
 var (
 	// sneakCfg are the struct representation of sneak settings
-	sneakCfg config.Settings
+	sneakCfg *config.Settings
 	// cfgfile is the path to the sneak config file different than the default
 	cfgFile string
 	// dataDir is the path where sneak stores its key/value database
