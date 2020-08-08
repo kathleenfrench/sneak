@@ -2,6 +2,7 @@ package sneak
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/kathleenfrench/common/gui"
 	"github.com/kathleenfrench/sneak/internal/config"
@@ -9,6 +10,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/timshannon/bolthold"
+	"go.etcd.io/bbolt"
 )
 
 // Version is a value injected at compile time for the current version of sneak
@@ -48,6 +50,25 @@ var rootCmd = &cobra.Command{
 	},
 }
 
+var dbCmd = &cobra.Command{
+	Use:    "db",
+	Short:  "admin view of db",
+	Hidden: true,
+	PreRun: func(cmd *cobra.Command, args []string) {
+		err := db.Close()
+		if err != nil {
+			gui.ExitWithError(err)
+		}
+	},
+	Run: func(cmd *cobra.Command, args []string) {
+		dbPath := fmt.Sprintf("%s/sneak.db", viper.GetString("data"))
+		err := store.Audit(dbPath)
+		if err != nil {
+			gui.ExitWithError(err)
+		}
+	},
+}
+
 // Execute adds all child commands to the root command set sets flags appropriately
 func Execute() {
 	var err error
@@ -57,7 +78,13 @@ func Execute() {
 		gui.ExitWithError(err)
 	}
 
-	db, err = bolthold.Open(fmt.Sprintf("%s/sneak.db", dataDir), 0600, nil)
+	opts := &bolthold.Options{
+		Options: &bbolt.Options{
+			Timeout: 10 * time.Second,
+		},
+	}
+
+	db, err = bolthold.Open(fmt.Sprintf("%s/sneak.db", dataDir), 0600, opts)
 	if err != nil {
 		gui.ExitWithError(fmt.Sprintf("could not initialize database - %s", err))
 	}
@@ -91,4 +118,5 @@ func init() {
 	configCmd.AddCommand(configDelCmd)
 
 	rootCmd.AddCommand(configCmd)
+	rootCmd.AddCommand(dbCmd)
 }
