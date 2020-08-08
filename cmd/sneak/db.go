@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/kathleenfrench/common/gui"
+	"github.com/kathleenfrench/sneak/internal/helpers"
 	"github.com/kathleenfrench/sneak/internal/store"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -48,7 +49,7 @@ var dbResetCmd = &cobra.Command{
 		store.InitDB(db, true, resetBucket)
 		defer db.Close()
 
-		fmt.Println("")
+		helpers.Spacer()
 		if resetBucket != "" {
 			gui.Info("fire", "bucket emptied", resetBucket)
 		} else {
@@ -57,8 +58,34 @@ var dbResetCmd = &cobra.Command{
 	},
 }
 
+var dbBackupCmd = &cobra.Command{
+	Use:     "backup",
+	Aliases: []string{"bu"},
+	PreRun: func(cmd *cobra.Command, args []string) {
+		err := db.Close()
+		if err != nil {
+			gui.ExitWithError(err)
+		}
+	},
+	Run: func(cmd *cobra.Command, args []string) {
+		helpers.Spacer()
+		dbdir := viper.GetString("data")
+
+		gui.Info("popcorn", "backing up your local DB", fmt.Sprintf("%s/sneak_backup.db", dbdir))
+
+		err := store.Backup(dbdir)
+		if err != nil {
+			gui.ExitWithError(err)
+		}
+
+		gui.Info("+1", "local db backed up!", fmt.Sprintf("%s/sneak_backup.db", dbdir))
+
+	},
+}
+
 func init() {
 	dbResetCmd.Flags().StringVarP(&resetBucket, "bucket", "b", "", "reset a specific bucket")
 	dbCmd.AddCommand(dbViewCmd)
 	dbCmd.AddCommand(dbResetCmd)
+	dbCmd.AddCommand(dbBackupCmd)
 }

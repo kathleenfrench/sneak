@@ -2,6 +2,8 @@ package store
 
 import (
 	"fmt"
+	"io"
+	"os"
 	"strings"
 
 	"github.com/kathleenfrench/common/fs"
@@ -94,4 +96,31 @@ func reset(db *bolthold.Store, name string) string {
 	}
 
 	return fmt.Sprintf("%s Bucket --> Does not Exist", name)
+}
+
+// Backup backs up the current database to the specified directory
+func Backup(dir string) error {
+	dbName := "sneak.db"
+	dbBackupName := "sneak_backup.db"
+
+	src, err := os.Open(fmt.Sprintf("%s/%s", dir, dbName))
+	if err != nil {
+		return err
+	}
+
+	defer src.Close()
+
+	backupFile, err := os.Create(fmt.Sprintf("%s/%s", dir, dbBackupName))
+	if err != nil {
+		return err
+	}
+
+	defer backupFile.Close()
+
+	_, err = io.Copy(backupFile, src)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

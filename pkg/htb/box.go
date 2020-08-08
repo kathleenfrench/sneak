@@ -102,7 +102,7 @@ func GetBoxByID(db *bolthold.Store, id uint64) (*Box, error) {
 // GetBoxByName fetches a box by name
 func GetBoxByName(db *bolthold.Store, name string) (*Box, error) {
 	b := &Box{}
-	err := db.Find(&b, bolthold.Where("Name").Eq(name))
+	err := db.Find(&b, bolthold.Where(bolthold.Key).Eq(name))
 	if err != nil {
 		return nil, err
 	}
