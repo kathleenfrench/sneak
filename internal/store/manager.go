@@ -298,14 +298,6 @@ func (m *manager) bucketItems(bucketQuery string, goBack bool) {
 				item.Value = strings.TrimSpace(string(v))
 			}
 
-			// color.Yellow("VALUE IN LOOP: %s", v)
-			// if v == kval.Nestedbucket {
-			// 	k = k + "*"
-			// 	v = ""
-			// 	item.Nested = true
-			// 	item.Value = ""
-			// }
-
 			items = append(items, item)
 		}
 
