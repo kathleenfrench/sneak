@@ -27,17 +27,14 @@ var difficulties = []string{
 }
 
 // PromptUserForBoxData prompts the user for values about the htb machine they want to add
-func PromptUserForBoxData() (Box, error) {
-	box := Box{
+func PromptUserForBoxData() (*Box, error) {
+	box := &Box{
 		Name:      gui.InputPromptWithResponse("what is the name of the box?", "", true),
 		IP:        gui.InputPromptWithResponse("what is its IP?", "", true),
 		Completed: false,
 		Active:    false,
-		OS:        gui.SelectPromptWithResponse("what is the OS?", osOptions, "", true),
-
-		Difficulty: gui.SelectPromptWithResponse("what is its difficulty?", difficulties, "", true),
-		Notes:      "",
-		Up:         false,
+		Notes:     "",
+		Up:        false,
 		Flags: Flags{
 			Root: "",
 			User: "",
@@ -45,6 +42,12 @@ func PromptUserForBoxData() (Box, error) {
 		Created:     time.Now(),
 		LastUpdated: time.Now(),
 	}
+
+	os := gui.SelectPromptWithResponse("what is the OS?", osOptions, "linux", true)
+	difficulty := gui.SelectPromptWithResponse("what is its difficulty?", difficulties, "easy", true)
+
+	box.OS = os
+	box.Difficulty = difficulty
 
 	color.Red("difficulty: %s", box.Difficulty)
 	color.Red("OS: %s", box.OS)

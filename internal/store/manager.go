@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"strings"
@@ -31,8 +32,8 @@ type manager struct {
 }
 
 type formatter interface {
-	DumpBuckets([]bucket)
-	DumpBucketItems(string, []item)
+	DumpBuckets(io.Writer, []bucket)
+	DumpBucketItems(io.Writer, string, []item)
 }
 
 type item struct {
@@ -51,7 +52,6 @@ type bucket struct {
 
 // Audit gives the ability to see what's happening in the DB
 func Audit(dbFilepath string) error {
-	color.HiBlue("db filepath: %s", dbFilepath)
 	m := manager{
 		viewer: &dbDisplay{},
 	}
@@ -137,7 +137,7 @@ func (m *manager) bucketlist() {
 	}
 
 	fmt.Fprint(os.Stdout, "DB Layout:\n\n")
-	m.viewer.DumpBuckets(buckets)
+	m.viewer.DumpBuckets(os.Stdout, buckets)
 	printHelpText()
 }
 
@@ -173,7 +173,7 @@ func (m *manager) bucketItems(bucketName string, goBack bool) {
 			items = append(items, item{Key: string(k), Value: string(v)})
 		}
 		fmt.Fprintf(os.Stdout, "Bucket: %s\n", bucketName)
-		m.viewer.DumpBucketItems(m.bucket, items)
+		m.viewer.DumpBucketItems(os.Stdout, m.bucket, items)
 		m.rootBucket = false // success this far means we're not at ROOT
 		m.lastLoc = getQuery // so we can also set the query cache for paging
 		printHelpText()
@@ -192,8 +192,8 @@ func (m *manager) connect(file string) {
 
 type dbDisplay struct{}
 
-func (d dbDisplay) DumpBuckets(bs []bucket) {
-	t := tablewriter.NewWriter(os.Stdout)
+func (d dbDisplay) DumpBuckets(w io.Writer, bs []bucket) {
+	t := tablewriter.NewWriter(w)
 	t.SetHeader([]string{"Buckets"})
 	for _, bucket := range bs {
 		row := []string{bucket.Name}
@@ -203,8 +203,8 @@ func (d dbDisplay) DumpBuckets(bs []bucket) {
 	t.Render()
 }
 
-func (d dbDisplay) DumpBucketItems(bucket string, items []item) {
-	t := tablewriter.NewWriter(os.Stdout)
+func (d dbDisplay) DumpBucketItems(w io.Writer, bucket string, items []item) {
+	t := tablewriter.NewWriter(w)
 	t.SetHeader([]string{"Key", "Value"})
 	color.HiBlue("# of items: %d", len(items))
 	for _, i := range items {

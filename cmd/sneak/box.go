@@ -9,6 +9,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// todo: add dropdown of options - add, list, etc
 var boxSubCmd = &cobra.Command{
 	Use:     "box",
 	Aliases: []string{"boxes", "b"},
@@ -16,8 +17,9 @@ var boxSubCmd = &cobra.Command{
 }
 
 var newBoxCmd = &cobra.Command{
-	Use:   "add",
-	Short: "add a new box",
+	Use:     "add",
+	Short:   "add a new box",
+	Aliases: []string{"new", "a"},
 	Run: func(cmd *cobra.Command, args []string) {
 		box, err := htb.PromptUserForBoxData()
 		if err != nil {
