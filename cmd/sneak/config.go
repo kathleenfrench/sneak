@@ -16,7 +16,9 @@ var configCmd = &cobra.Command{
 	Use:     "config",
 	Aliases: []string{"configs", "c"},
 	Short:   "view and/or modify your sneak config values",
-	Args:    cobra.MinimumNArgs(1),
+	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+		rootCmd.PersistentPreRun(cmd, args)
+	},
 }
 
 var configListCmd = &cobra.Command{
@@ -91,11 +93,4 @@ var configDelCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 
 	},
-}
-
-func init() {
-	configCmd.AddCommand(configListCmd)
-	configCmd.AddCommand(configSetCmd)
-	configCmd.AddCommand(configUpdateCmd)
-	configCmd.AddCommand(configDelCmd)
 }

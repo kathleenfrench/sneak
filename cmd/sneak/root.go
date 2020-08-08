@@ -5,8 +5,10 @@ import (
 
 	"github.com/kathleenfrench/common/gui"
 	"github.com/kathleenfrench/sneak/internal/config"
+	"github.com/kathleenfrench/sneak/internal/store"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"github.com/timshannon/bolthold"
 )
 
 // Version is a value injected at compile time for the current version of sneak
@@ -20,17 +22,18 @@ var (
 	cfgFile string
 	// dataDir is the path where sneak stores its key/value database
 	dataDir string
+
+	db *bolthold.Store
 )
 
 var rootCmd = &cobra.Command{
 	Use:   "sneak",
 	Short: "a tool for common actions when pentesting/playing CTFs",
 	Run: func(cmd *cobra.Command, args []string) {
+		fmt.Println(config.Banner)
 		cmd.Usage()
 	},
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		fmt.Println(config.Banner)
-
 		err := config.SafeWriteConfig()
 		if err != nil {
 			gui.ExitWithError(err)
@@ -40,14 +43,21 @@ var rootCmd = &cobra.Command{
 		if err != nil {
 			gui.ExitWithError(err)
 		}
+
+		dbc := &store.Config{
+			FileName: "sneak.db",
+			Path:     sneakCfg.DBPath,
+		}
+
+		db, err = store.NewDB(dbc)
+		if err != nil {
+			gui.ExitWithError(fmt.Sprintf("could not initialize the sneak db - %s", err))
+		}
 	},
 }
 
 // Execute adds all child commands to the root command set sets flags appropriately
 func Execute() {
-	cobra.OnInitialize(config.InitConfig)
-	initGlobalFlags()
-
 	if err := rootCmd.Execute(); err != nil {
 		gui.ExitWithError(err)
 	}
@@ -64,5 +74,13 @@ func initGlobalFlags() {
 }
 
 func init() {
+	initGlobalFlags()
+	cobra.OnInitialize(config.InitConfig)
+
+	configCmd.AddCommand(configListCmd)
+	configCmd.AddCommand(configSetCmd)
+	configCmd.AddCommand(configUpdateCmd)
+	configCmd.AddCommand(configDelCmd)
+
 	rootCmd.AddCommand(configCmd)
 }

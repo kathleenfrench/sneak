@@ -4,7 +4,7 @@ go 1.12
 
 require (
 	github.com/Netflix/go-expect v0.0.0-20200312175327-da48e75238e2 // indirect
-	github.com/asaskevich/govalidator v0.0.0-20200428143746-21a406dcc535
+	github.com/asaskevich/govalidator v0.0.0-20200428143746-21a406dcc535 // indirect
 	github.com/creack/pty v1.1.11 // indirect
 	github.com/fatih/color v1.9.0
 	github.com/hinshun/vt10x v0.0.0-20180809195222-d55458df857c // indirect
@@ -18,8 +18,9 @@ require (
 	github.com/spf13/viper v1.7.1
 	github.com/stretchr/objx v0.3.0 // indirect
 	github.com/stretchr/testify v1.6.1 // indirect
-	github.com/timshannon/bolthold v0.0.0-20200721214230-3be86da07fdb // indirect
+	github.com/timshannon/bolthold v0.0.0-20200721214230-3be86da07fdb
 	github.com/yuin/goldmark v1.2.1 // indirect
+	go.etcd.io/bbolt v1.3.2
 	golang.org/x/crypto v0.0.0-20200728195943-123391ffb6de // indirect
 	golang.org/x/net v0.0.0-20200707034311-ab3426394381 // indirect
 	golang.org/x/sys v0.0.0-20200806125547-5acd03effb82 // indirect
