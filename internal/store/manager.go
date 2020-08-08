@@ -2,6 +2,8 @@ package store
 
 import (
 	"bufio"
+	"bytes"
+	"encoding/gob"
 	"errors"
 	"fmt"
 	"io"
@@ -10,6 +12,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/davecgh/go-spew/spew"
 	"github.com/fatih/color"
 	"github.com/kathleenfrench/common/fs"
 	"github.com/kathleenfrench/sneak/pkg/htb"
@@ -125,8 +128,9 @@ type formatter interface {
 }
 
 type item struct {
-	Key   string
-	Value string
+	Key    string
+	Value  string
+	Nested bool
 }
 
 type box struct {
@@ -284,12 +288,25 @@ func (m *manager) bucketItems(bucketQuery string, goBack bool) {
 		}
 
 		for k, v := range res.Result {
+			item := item{}
 			if v == kval.Nestedbucket {
-				k = k + "*"
-				v = ""
+				item.Key = strings.TrimSpace(string(k)) + "*"
+				item.Value = v
+				item.Nested = true
+			} else {
+				item.Key = strings.TrimSpace(string(k))
+				item.Value = strings.TrimSpace(string(v))
 			}
 
-			items = append(items, item{Key: strings.TrimSpace(string(k)), Value: strings.TrimSpace(string(v))})
+			// color.Yellow("VALUE IN LOOP: %s", v)
+			// if v == kval.Nestedbucket {
+			// 	k = k + "*"
+			// 	v = ""
+			// 	item.Nested = true
+			// 	item.Value = ""
+			// }
+
+			items = append(items, item)
 		}
 
 		m.viewer.DumpBucketItems(os.Stdout, m.bucket, items)
@@ -332,7 +349,17 @@ func (d dbDisplay) DumpBucketItems(w io.Writer, bucket string, items []item) {
 	t := tablewriter.NewWriter(w)
 	t.SetHeader([]string{"Key", "Value"})
 	for _, i := range items {
-		row := []string{i.Key, fmt.Sprintf("%v", i.Value)}
+		row := []string{}
+		if i.Nested {
+			row = append(row, i.Key, "")
+		} else {
+			reader := bytes.NewReader([]byte(i.Value))
+			decoder := gob.NewDecoder(reader)
+			var bx htb.Box
+			decoder.Decode(&bx)
+			row = append(row, i.Key, spew.Sdump(bx))
+		}
+
 		t.Append(row)
 	}
 
