@@ -49,9 +49,10 @@ var configUpdateCmd = &cobra.Command{
 }
 
 var configSetCmd = &cobra.Command{
-	Use:   "set",
-	Args:  cobra.ExactArgs(2),
-	Short: "skip the update GUI and either change a specific config value by config key or add a custom config",
+	Use:    "set",
+	Args:   cobra.ExactArgs(2),
+	Short:  "skip the update GUI and either change a specific config value by config key or add a custom config",
+	Hidden: true,
 	Run: func(cmd *cobra.Command, args []string) {
 		// key := args[0]
 		// val := args[1]
@@ -81,6 +82,7 @@ var configDelCmd = &cobra.Command{
 	Use:     "delete",
 	Aliases: []string{"del", "rm"},
 	Short:   "delete non-required config keys and values",
+	Hidden:  true,
 	Run: func(cmd *cobra.Command, args []string) {
 
 	},
