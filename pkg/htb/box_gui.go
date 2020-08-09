@@ -145,12 +145,14 @@ func PrintBoxDataTable(box Box) {
 		{"hostname", box.Hostname},
 		{"os", box.Hostname},
 		{"difficulty", box.Difficulty},
+		{"active", box.Active},
+		{"completed", box.Completed},
 		{"added", humanize.Time(box.Created)},
 		{"last updated", humanize.Time(box.LastUpdated)},
 	}
 
 	helpers.Spacer()
-	gui.SideBySideTable(data, "HiRed")
+	gui.SideBySideTable(data, "Red")
 	helpers.Spacer()
 }
 
@@ -172,7 +174,7 @@ func printFlagTable(flags Flags) {
 	}
 
 	helpers.Spacer()
-	gui.SideBySideTable(data, "HiRed")
+	gui.SideBySideTable(data, "Red")
 	helpers.Spacer()
 }
 
@@ -206,13 +208,22 @@ func SelectBoxActionsDropdown(db *bolthold.Store, box Box, boxes []Box) error {
 		switch box.Active {
 		case true:
 			color.HiGreen("%s is currently set to active", box.Name)
-			color.Yellow("toggling it to inactive...")
-			box.Active = false
-
+			setInactive := gui.ConfirmPrompt(fmt.Sprintf("set %s as inactive?", box.Name), "", true, true)
+			switch setInactive {
+			case true:
+				box.Active = false
+			default:
+				return SelectBoxActionsDropdown(db, box, boxes)
+			}
 		default:
 			color.Red("%s is not currently set to active", box.Name)
-			color.Yellow("toggling it to active...")
-			box.Active = false
+			setActive := gui.ConfirmPrompt(fmt.Sprintf("set %s as active?", box.Name), "", true, true)
+			switch setActive {
+			case true:
+				box.Active = true
+			default:
+				return SelectBoxActionsDropdown(db, box, boxes)
+			}
 		}
 
 		// write the change to the db
