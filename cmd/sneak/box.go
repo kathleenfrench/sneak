@@ -3,7 +3,6 @@ package sneak
 import (
 	"fmt"
 
-	"github.com/fatih/color"
 	"github.com/kathleenfrench/common/gui"
 	"github.com/kathleenfrench/sneak/pkg/htb"
 	"github.com/spf13/cobra"
@@ -26,7 +25,7 @@ var newBoxCmd = &cobra.Command{
 			gui.ExitWithError(err)
 		}
 
-		err = htb.CreateBox(db, box)
+		err = htb.SaveBox(db, box)
 		if err != nil {
 			gui.ExitWithError(err)
 		}
@@ -45,10 +44,10 @@ var listBoxesCmd = &cobra.Command{
 			gui.ExitWithError(err)
 		}
 
-		for _, b := range boxes {
-			completion := htb.CompletionStatusIcon(b.Completed)
-			color.Yellow("box: %v", b)
-			gui.Info("magnifying_glass_tilted_left", fmt.Sprintf("%s - %s", b.Name, b.IP), completion)
+		selection := htb.SelectBoxFromDropdown(boxes)
+
+		if err = htb.SelectBoxActionsDropdown(db, selection, boxes); err != nil {
+			gui.ExitWithError(err)
 		}
 	},
 }

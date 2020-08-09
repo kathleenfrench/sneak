@@ -33,6 +33,7 @@ func InitConfig() {
 		gui.ExitWithError(err)
 	}
 
+	cfg.Home = home
 	cfgPath := fmt.Sprintf("%s/.sneak", home)
 
 	// check for whether the directory and config file already exist
@@ -41,12 +42,32 @@ func InitConfig() {
 		gui.ExitWithError(err)
 	}
 
+	err = createBoxNotesSubdir(cfgPath)
+	if err != nil {
+		gui.ExitWithError(fmt.Sprintf("could not create dedicated notes directory: %s", err))
+	}
+
 	viper.AddConfigPath(cfgPath)
 	viper.Set("cfg_dir", cfgPath)
 
 	if err := viper.ReadInConfig(); err != nil {
 		gui.Warn(fmt.Sprintf("not seeing a config file where i'd expect it in %s - one sec...", cfgPath), nil)
 	}
+}
+
+func createBoxNotesSubdir(cfgPath string) error {
+	err := fs.CreateDir(fmt.Sprintf("%s/notes", cfgPath))
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// GetNotesDirectory returns the path to the notes directory for boxes
+func GetNotesDirectory() string {
+	cfgPath := viper.GetString("cfg_dir")
+	return fmt.Sprintf("%s/notes", cfgPath)
 }
 
 // SafeWriteConfig creates the config file if it doesn't exist yet
