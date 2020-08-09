@@ -233,6 +233,13 @@ func SelectBoxActionsDropdown(db *bolthold.Store, box Box, boxes []Box) error {
 		}
 
 		color.Green("successfully changed the active status of %s!", box.Name)
+
+		// after making that change, re-fetch all of our boxes for up to date info
+		boxes, err = GetAllBoxes(db)
+		if err != nil {
+			return err
+		}
+
 		return SelectBoxActionsDropdown(db, box, boxes)
 	case checkConnection:
 		color.Red("TODO")
@@ -258,6 +265,12 @@ func SelectBoxActionsDropdown(db *bolthold.Store, box Box, boxes []Box) error {
 			return err
 		}
 
+		// after making that change, re-fetch all of our boxes for up to date info
+		boxes, err = GetAllBoxes(db)
+		if err != nil {
+			return err
+		}
+
 		return SelectBoxActionsDropdown(db, box, boxes)
 	case flags:
 		printFlagTable(box.Flags)
@@ -274,6 +287,12 @@ func SelectBoxActionsDropdown(db *bolthold.Store, box Box, boxes []Box) error {
 
 			// write the change to the db
 			err := SaveBox(db, box)
+			if err != nil {
+				return err
+			}
+
+			// after making that change, re-fetch all of our boxes for up to date info
+			boxes, err = GetAllBoxes(db)
 			if err != nil {
 				return err
 			}
