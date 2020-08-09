@@ -3,8 +3,6 @@ package sneak
 import (
 	"fmt"
 
-	"github.com/davecgh/go-spew/spew"
-	"github.com/fatih/color"
 	"github.com/kathleenfrench/common/gui"
 	"github.com/kathleenfrench/sneak/pkg/htb"
 	"github.com/spf13/cobra"
@@ -48,8 +46,9 @@ var listBoxesCmd = &cobra.Command{
 
 		selection := htb.SelectBoxFromDropdown(boxes)
 
-		color.HiGreen("chosen: %s", selection.Name)
-		spew.Dump(selection)
+		if err = htb.SelectBoxActionsDropdown(selection, boxes); err != nil {
+			gui.ExitWithError(err)
+		}
 	},
 }
 

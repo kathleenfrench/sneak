@@ -7,7 +7,9 @@ import (
 
 	"github.com/asaskevich/govalidator"
 	"github.com/fatih/color"
+	"github.com/jedib0t/go-pretty/table"
 	"github.com/kathleenfrench/common/gui"
+	"github.com/kathleenfrench/sneak/internal/helpers"
 )
 
 var osOptions = []string{
@@ -125,4 +127,31 @@ func SelectBoxFromDropdown(boxes []Box) Box {
 	selection := gui.SelectPromptWithResponse("select a box", boxNames, nil, false)
 	selected := boxMap[selection]
 	return selected
+}
+
+var boxActions = []string{
+	"activate",
+	"check connection",
+}
+
+// PrintBoxDataTable poutputs box data in a readable table in the terminal window
+func PrintBoxDataTable(box Box) {
+	data := []table.Row{
+		{"name", box.Name},
+		{"IP", box.IP},
+		{"description", box.Description},
+	}
+
+	helpers.Spacer()
+
+	gui.SideBySideTable(data, "HiRed")
+}
+
+// SelectBoxActionsDropdown lists available actions with a single box or the ability to return to the 'main menu' of boxes
+func SelectBoxActionsDropdown(box Box, boxes []Box) error {
+	PrintBoxDataTable(box)
+	selection := gui.SelectPromptWithResponse("select from the dropdown", boxActions, nil, true)
+
+	color.Red(selection)
+	return nil
 }

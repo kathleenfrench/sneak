@@ -15,9 +15,10 @@ type Box struct {
 	Completed   bool `boltholdIndex:"Completed"` // when root + user flags captured
 	Active      bool `boltholdIndex:"Active"`
 	Hostname    string
-	OS          string
+	OS          string `boltholdIndex:"OS"`
 	Difficulty  string
 	Notes       string
+	Description string
 	Up          bool
 	Flags       Flags
 	Created     time.Time
