@@ -51,34 +51,6 @@ func SaveBox(db *bolthold.Store, box Box) error {
 	}
 
 	return nil
-	// if err := db.Bolt().Update(func(tx *bbolt.Tx) error {
-	// 	if box.Created.IsZero() {
-	// 		box.Created = time.Now()
-	// 		box.LastUpdated = box.Created
-	// 	}
-
-	// 	if box.ID != 0 {
-	// 		var incrErr error
-	// 		bucket := tx.Bucket([]byte(box.bucketName()))
-	// 		box.ID, incrErr = bucket.NextSequence()
-	// 		if incrErr != nil {
-	// 			gui.Warn(fmt.Sprintf("issue autoincrementing: %v", incrErr), nil)
-	// 		}
-
-	// 		box.Created = time.Now()
-	// 	} else {
-	// 		box.LastUpdated = time.Now()
-	// 	}
-
-	// 	color.HiGreen("next int: %d", box.ID)
-
-	// 	err := db.TxUpsert(tx, box.ID, box)
-	// 	return err
-	// }); err != nil {
-	// 	return err
-	// }
-
-	// return nil
 }
 
 // DeleteBox deletes a box
@@ -89,17 +61,6 @@ func DeleteBox(db *bolthold.Store, boxID uint64) error {
 	}
 
 	return nil
-}
-
-// GetBoxByID gets a box by key
-func GetBoxByID(db *bolthold.Store, id uint64) (*Box, error) {
-	b := &Box{}
-	err := db.Get(id, b)
-	if err != nil {
-		return nil, err
-	}
-
-	return b, nil
 }
 
 // GetBoxByName fetches a box by name
