@@ -25,7 +25,7 @@ var newBoxCmd = &cobra.Command{
 			gui.ExitWithError(err)
 		}
 
-		err = htb.CreateBox(db, box)
+		err = htb.SaveBox(db, box)
 		if err != nil {
 			gui.ExitWithError(err)
 		}
@@ -46,7 +46,7 @@ var listBoxesCmd = &cobra.Command{
 
 		selection := htb.SelectBoxFromDropdown(boxes)
 
-		if err = htb.SelectBoxActionsDropdown(selection, boxes); err != nil {
+		if err = htb.SelectBoxActionsDropdown(db, selection, boxes); err != nil {
 			gui.ExitWithError(err)
 		}
 	},

@@ -88,8 +88,9 @@ func initGlobalFlags() {
 }
 
 func init() {
-	initGlobalFlags()
 	cobra.OnInitialize(config.InitConfig)
+
+	initGlobalFlags()
 
 	configCmd.AddCommand(configListCmd)
 	configCmd.AddCommand(configSetCmd)
@@ -100,4 +101,5 @@ func init() {
 	rootCmd.AddCommand(dbCmd)
 	rootCmd.AddCommand(boxSubCmd)
 	rootCmd.AddCommand(gotoCmd)
+	rootCmd.AddCommand(vpnCmd)
 }

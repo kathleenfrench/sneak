@@ -33,6 +33,7 @@ func InitConfig() {
 		gui.ExitWithError(err)
 	}
 
+	cfg.Home = home
 	cfgPath := fmt.Sprintf("%s/.sneak", home)
 
 	// check for whether the directory and config file already exist

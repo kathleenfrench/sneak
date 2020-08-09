@@ -12,6 +12,7 @@ type Settings struct {
 	HTBUsername     string `yaml:"htb_username"`
 	DefaultEditor   string `yaml:"default_editor"`
 	DBPath          string `yaml:"data"`
+	Home            string
 }
 
 // Parse unmarshals the viper configs into the sneak settings struct

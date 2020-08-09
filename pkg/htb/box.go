@@ -36,11 +36,13 @@ func (bx *Box) bucketName() string {
 	return "Box"
 }
 
-// CreateBox inserts a new box into the db
-func CreateBox(db *bolthold.Store, box Box) error {
+// SaveBox inserts a new box into the db
+func SaveBox(db *bolthold.Store, box Box) error {
 	if box.Created.IsZero() {
 		box.Created = time.Now()
 		box.LastUpdated = box.Created
+	} else {
+		box.LastUpdated = time.Now()
 	}
 
 	err := db.Upsert(box.Name, box)

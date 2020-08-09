@@ -15,6 +15,7 @@ import (
 	"github.com/kathleenfrench/sneak/internal/config"
 	"github.com/kathleenfrench/sneak/internal/helpers"
 	"github.com/spf13/viper"
+	"github.com/timshannon/bolthold"
 
 	humanize "github.com/dustin/go-humanize"
 )
@@ -37,14 +38,15 @@ var difficulties = []string{
 // PromptUserForBoxData prompts the user for values about the htb machine they want to add
 func PromptUserForBoxData() (Box, error) {
 	box := Box{
-		Name:       gui.InputPromptWithResponse("what is the name of the box?", "", true),
-		IP:         gui.InputPromptWithResponse("what is its IP?", "", true),
-		Completed:  false,
-		Active:     false,
-		Notes:      "",
-		OS:         gui.SelectPromptWithResponse("what is the OS?", osOptions, nil, true),
-		Difficulty: gui.SelectPromptWithResponse("what is its difficulty?", difficulties, nil, true),
-		Up:         false,
+		Name:        gui.InputPromptWithResponse("what is the name of the box?", "", true),
+		IP:          gui.InputPromptWithResponse("what is its IP?", "", true),
+		Description: gui.InputPromptWithResponse("provide a short description of the box if you want", "", true),
+		Completed:   false,
+		Active:      false,
+		Notes:       "",
+		OS:          gui.SelectPromptWithResponse("what is the OS?", osOptions, nil, true),
+		Difficulty:  gui.SelectPromptWithResponse("what is its difficulty?", difficulties, nil, true),
+		Up:          false,
 		Flags: Flags{
 			Root: "",
 			User: "",
@@ -152,32 +154,75 @@ func PrintBoxDataTable(box Box) {
 	helpers.Spacer()
 }
 
+func printFlagTable(flags Flags) {
+	userFlag := flags.User
+	rootFlag := flags.Root
+
+	if userFlag == "" {
+		userFlag = "NOT SET"
+	}
+
+	if rootFlag == "" {
+		rootFlag = "NOT SET"
+	}
+
+	data := []table.Row{
+		{"user", userFlag},
+		{"root", rootFlag},
+	}
+
+	helpers.Spacer()
+	gui.SideBySideTable(data, "HiRed")
+	helpers.Spacer()
+}
+
 const (
-	setToActive     = "set to active"
-	checkConnection = "check connection"
-	openNotes       = "open notes"
-	flags           = "flags"
-	returnToBoxes   = "return to other boxes"
-	quit            = "quit"
+	toggleActiveStatus = "toggle active status"
+	checkConnection    = "check connection"
+	openNotes          = "open notes"
+	editDescription    = "edit description"
+	flags              = "flags"
+	returnToBoxes      = "return to other boxes"
+	quit               = "quit"
 )
 
 var boxActions = []string{
-	setToActive,
+	toggleActiveStatus,
 	checkConnection,
 	openNotes,
+	editDescription,
 	flags,
 	returnToBoxes,
 	quit,
 }
 
 // SelectBoxActionsDropdown lists available actions with a single box or the ability to return to the 'main menu' of boxes
-func SelectBoxActionsDropdown(box Box, boxes []Box) error {
+func SelectBoxActionsDropdown(db *bolthold.Store, box Box, boxes []Box) error {
 	PrintBoxDataTable(box)
 	selection := gui.SelectPromptWithResponse("select from the dropdown", boxActions, nil, true)
 
 	switch selection {
-	case setToActive:
-		color.Red("TODO")
+	case toggleActiveStatus:
+		switch box.Active {
+		case true:
+			color.HiGreen("%s is currently set to active", box.Name)
+			color.Yellow("toggling it to inactive...")
+			box.Active = false
+
+		default:
+			color.Red("%s is not currently set to active", box.Name)
+			color.Yellow("toggling it to active...")
+			box.Active = false
+		}
+
+		// write the change to the db
+		err := SaveBox(db, box)
+		if err != nil {
+			return err
+		}
+
+		color.Green("successfully changed the active status of %s!", box.Name)
+		return SelectBoxActionsDropdown(db, box, boxes)
 	case checkConnection:
 		color.Red("TODO")
 	case openNotes:
@@ -193,11 +238,41 @@ func SelectBoxActionsDropdown(box Box, boxes []Box) error {
 			return err
 		}
 
-		return SelectBoxActionsDropdown(box, boxes)
+		return SelectBoxActionsDropdown(db, box, boxes)
+	case editDescription:
+		box.Description = gui.InputPromptWithResponse("provide a new description", "", true)
+		// write the change to the db
+		err := SaveBox(db, box)
+		if err != nil {
+			return err
+		}
+
+		return SelectBoxActionsDropdown(db, box, boxes)
 	case flags:
-		color.Red("TODO")
+		printFlagTable(box.Flags)
+		addOrUpdate := gui.ConfirmPrompt("do you want to update any flag values?", "", false, true)
+		switch addOrUpdate {
+		case true:
+			whichFlags := gui.SelectPromptWithResponse("which flag?", []string{"root", "user"}, nil, true)
+			switch whichFlags {
+			case "root":
+				box.Flags.Root = gui.InputPromptWithResponse("enter a new root flag", box.Flags.Root, true)
+			case "user":
+				box.Flags.User = gui.InputPromptWithResponse("enter a new user flag", box.Flags.User, true)
+			}
+
+			// write the change to the db
+			err := SaveBox(db, box)
+			if err != nil {
+				return err
+			}
+
+			fallthrough
+		default:
+			return SelectBoxActionsDropdown(db, box, boxes)
+		}
 	case returnToBoxes:
-		return SelectBoxActionsDropdown(SelectBoxFromDropdown(boxes), boxes)
+		return SelectBoxActionsDropdown(db, SelectBoxFromDropdown(boxes), boxes)
 	case quit:
 		os.Exit(0)
 	}
