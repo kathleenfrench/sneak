@@ -1,4 +1,4 @@
-package helpers
+package vpn
 
 import (
 	"io/ioutil"

@@ -3,19 +3,19 @@ package sneak
 import (
 	"github.com/fatih/color"
 	"github.com/kathleenfrench/common/gui"
-	"github.com/kathleenfrench/sneak/internal/helpers"
+	"github.com/kathleenfrench/sneak/internal/vpn"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
 
-var openVPN *helpers.OpenVPN
+var openVPN *vpn.OpenVPN
 
 var vpnCmd = &cobra.Command{
 	Use:   "vpn",
 	Short: "connect to the openvpn client",
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		var err error
-		openVPN, err = helpers.NewOpenVPNClient()
+		openVPN, err = vpn.NewOpenVPNClient()
 		if err != nil {
 			gui.ExitWithError(err)
 		}
