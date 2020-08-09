@@ -8,7 +8,6 @@ import (
 	"github.com/asaskevich/govalidator"
 	"github.com/fatih/color"
 	"github.com/kathleenfrench/common/gui"
-	"github.com/kyokomi/emoji"
 )
 
 var osOptions = []string{
@@ -69,13 +68,15 @@ func (b Box) validate() error {
 	return nil
 }
 
-// CompletionStatusIcon returns an icon with the completion status of a box
-func CompletionStatusIcon(completed bool) string {
+// CompletionColorizer returns an icon with the completion status of a box
+func CompletionColorizer(completed bool) string {
 	if completed {
-		return fmt.Sprintf("completed: %s", emoji.Sprint(":white_check_mark:"))
+		return color.HiGreenString("pwnd")
+		// return fmt.Sprintf("pwnd: %s", emoji.Sprint(":white_check_mark:"))
 	}
 
-	return fmt.Sprintf("completed: %s", emoji.Sprint(":x:"))
+	return color.HiYellowString("incomplete")
+	// return fmt.Sprintf("pwnd: %s", emoji.Sprint(":x:"))
 }
 
 // DifficultyColorizer colorizes based on difficulty
@@ -92,4 +93,36 @@ func DifficultyColorizer(diff string) string {
 	}
 
 	return ""
+}
+
+func constructBoxListing(box Box) string {
+	head := fmt.Sprintf(
+		"%s - [%s][%s][%s]",
+		box.Name,
+		color.HiBlueString(box.OS),
+		DifficultyColorizer(box.Difficulty),
+		CompletionColorizer(box.Completed),
+	)
+
+	return head
+}
+
+func makeGuiBoxMappings(boxes []Box) (keys []string, mapping map[string]Box) {
+	mapping = make(map[string]Box)
+
+	for _, b := range boxes {
+		name := constructBoxListing(b)
+		keys = append(keys, name)
+		mapping[name] = b
+	}
+
+	return keys, mapping
+}
+
+// SelectBoxFromDropdown lists a collection of boxes to choose from in a terminal dropdown
+func SelectBoxFromDropdown(boxes []Box) Box {
+	boxNames, boxMap := makeGuiBoxMappings(boxes)
+	selection := gui.SelectPromptWithResponse("select a box", boxNames, nil, false)
+	selected := boxMap[selection]
+	return selected
 }

@@ -3,6 +3,7 @@ package sneak
 import (
 	"fmt"
 
+	"github.com/davecgh/go-spew/spew"
 	"github.com/fatih/color"
 	"github.com/kathleenfrench/common/gui"
 	"github.com/kathleenfrench/sneak/pkg/htb"
@@ -45,11 +46,10 @@ var listBoxesCmd = &cobra.Command{
 			gui.ExitWithError(err)
 		}
 
-		for _, b := range boxes {
-			completion := htb.CompletionStatusIcon(b.Completed)
-			color.Yellow("box: %v", b)
-			gui.Info("magnifying_glass_tilted_left", fmt.Sprintf("%s - %s", b.Name, b.IP), completion)
-		}
+		selection := htb.SelectBoxFromDropdown(boxes)
+
+		color.HiGreen("chosen: %s", selection.Name)
+		spew.Dump(selection)
 	},
 }
 
