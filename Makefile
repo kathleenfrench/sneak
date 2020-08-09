@@ -36,7 +36,7 @@ vendor: go.sum
 	@GO111MODULE=on $(GO) mod vendor
 
 .PHONY: build
-build: ${BUILD_OUTPUT_DIR} vendor ## build the sneak binary
+build: vendor ${BUILD_OUTPUT_DIR} ## build the sneak binary
 	@echo "compiling ${NAME}..."
 	@export GOOS=$(GOOS) GOARCH=$(GOARCH) && \
 		export GO111MODULE=on && \

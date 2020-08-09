@@ -16,7 +16,7 @@ type Box struct {
 	Active      bool `boltholdIndex:"Active"`
 	Hostname    string
 	OS          string
-	Difficulty  string // easy, medium, hard, insane
+	Difficulty  string
 	Notes       string
 	Up          bool
 	Flags       Flags
@@ -32,7 +32,7 @@ type Flags struct {
 
 // bucketName returns the bucket name for box data
 func (bx *Box) bucketName() string {
-	return "Boxes"
+	return "Box"
 }
 
 // CreateBox inserts a new box into the db

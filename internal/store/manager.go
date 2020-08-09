@@ -2,12 +2,16 @@ package store
 
 import (
 	"bufio"
+	"bytes"
+	"encoding/gob"
 	"errors"
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"strings"
 
+	"github.com/davecgh/go-spew/spew"
 	"github.com/fatih/color"
 	"github.com/kathleenfrench/common/fs"
 	"github.com/kathleenfrench/sneak/pkg/htb"
@@ -15,10 +19,51 @@ import (
 	"github.com/olekukonko/tablewriter"
 )
 
-const helpText = "> Type bucket name to explore [quit: :q/CTRL+C] [go back: :b] [return to root bucket: ENTER]"
+// h/t: https://github.com/hasit/bolter
+
+var helpText = `<CONTROLS>
+[:q/CTRL+C to exit] [:b to go back]
+[:help for query help] 
+[ENTER to return to root bucket]
+`
+
+const kvalHelpText = `
+<FUNCTIONS>
+
+INS   Insert
+GET   Get values
+LIS   Check existence
+DEL   Delete
+REN   Rename
+
+<OPERATORS>
+
+>>    Bucket:Bucket relationship
+>>>>  Bucket:Key relationship
+::    Key::Value releationship
+=>    Name assignment
+_     Wildcard
+
+<CAPABILITIES>
+{PAT} Given a regex {PAT} for Key XOR Value, find match.
+
+<RESTRICTONS>
+Must be >= 1 Buckets for data. 
+{PAT} is not a valid option for an INS query.
+`
+
+func printRunQuery() {
+	fmt.Fprintf(os.Stdout, "\n%s\n\n", color.YellowString("> Enter bucket name"))
+}
 
 func printHelpText() {
-	fmt.Fprintf(os.Stdout, "\n%s\n\n", helpText)
+	fmt.Fprintf(os.Stdout, "\n%s\n", helpText)
+}
+
+func printKvalHelpText() {
+	color.HiBlue("KVAL (Key Value Access Language) - see full specs at: https://github.com/kval-access-language/kval-language-specification")
+	fmt.Fprintf(os.Stdout, "%s\n", kvalHelpText)
+	printRunQuery()
 }
 
 type manager struct {
@@ -31,13 +76,14 @@ type manager struct {
 }
 
 type formatter interface {
-	DumpBuckets([]bucket)
-	DumpBucketItems(string, []item)
+	DumpBuckets(io.Writer, []bucket)
+	DumpBucketItems(io.Writer, string, []item)
 }
 
 type item struct {
-	Key   string
-	Value string
+	Key    string
+	Value  string
+	Nested bool
 }
 
 type box struct {
@@ -51,7 +97,6 @@ type bucket struct {
 
 // Audit gives the ability to see what's happening in the DB
 func Audit(dbFilepath string) error {
-	color.HiBlue("db filepath: %s", dbFilepath)
 	m := manager{
 		viewer: &dbDisplay{},
 	}
@@ -63,22 +108,20 @@ func Audit(dbFilepath string) error {
 	m.connect(dbFilepath)
 	defer kval.Disconnect(m.kb)
 
+	printHelpText()
 	m.readInput()
 	return nil
 }
 
 func (m *manager) readInput() {
-
 	m.bucketlist()
 	s := bufio.NewScanner(os.Stdin)
 	for s.Scan() {
 		bucket := s.Text()
 		fmt.Fprintln(os.Stdout, "")
 		switch bucket {
-		case ":q":
+		case ":q", "\x18":
 			color.HiCyan("exiting...")
-			os.Exit(0)
-		case "\x18":
 			return
 		case ":b":
 			if !strings.Contains(m.currentLoc, "") || !strings.Contains(m.currentLoc, ">>") {
@@ -88,6 +131,8 @@ func (m *manager) readInput() {
 			} else {
 				m.bucketItems(bucket, true)
 			}
+		case ":help":
+			printKvalHelpText()
 		case "":
 			m.bucketlist()
 		default:
@@ -98,10 +143,19 @@ func (m *manager) readInput() {
 	}
 }
 
+func parseBucket(query string) string {
+	split := strings.Split(query, " ")
+	if len(split) >= 2 {
+		return split[1]
+	}
+
+	return ""
+}
+
 func (m *manager) updateLoc(bucket string, goBack bool) string {
 	if bucket == m.lastLoc {
 		m.currentLoc = bucket
-		return m.currentLoc
+		return bucket
 	}
 
 	if goBack {
@@ -123,6 +177,7 @@ func (m *manager) updateLoc(bucket string, goBack bool) string {
 }
 
 func (m *manager) bucketlist() {
+	color.Yellow("ROOT BUCKET")
 	m.rootBucket = true
 	m.currentLoc = ""
 
@@ -132,26 +187,28 @@ func (m *manager) bucketlist() {
 	if err != nil {
 		panic(err)
 	}
+
 	for k := range res.Result {
 		buckets = append(buckets, bucket{Name: string(k) + "*"})
 	}
 
-	fmt.Fprint(os.Stdout, "DB Layout:\n\n")
-	m.viewer.DumpBuckets(buckets)
-	printHelpText()
+	m.viewer.DumpBuckets(os.Stdout, buckets)
+	printRunQuery()
 }
 
-func (m *manager) bucketItems(bucketName string, goBack bool) {
+func (m *manager) bucketItems(bucket string, goBack bool) {
 	items := []item{}
-	getQuery := m.updateLoc(bucketName, goBack)
-	if getQuery != "" {
-		fmt.Fprintf(os.Stdout, "Query: "+getQuery+"\n\n")
-		res, err := kval.Query(m.kb, "GET "+getQuery)
+	dbQuery := m.updateLoc(bucket, goBack)
+	if dbQuery != "" {
+		dbQuery := fmt.Sprintf("GET %s", bucket)
+		color.Green("\n[RUNNING]: %s\n", dbQuery)
+
+		res, err := kval.Query(m.kb, dbQuery)
 		if err != nil {
 			if err.Error() != "Cannot GOTO bucket, bucket not found" {
-				log.Fatal(err)
+				log.Fatal(color.RedString(fmt.Sprintf("%v", err)))
 			} else {
-				fmt.Fprintf(os.Stdout, "> Bucket not found\n")
+				fmt.Fprintf(os.Stdout, color.RedString("> Bucket not found\n"))
 				if m.rootBucket == true {
 					m.bucketlist()
 					return
@@ -159,23 +216,35 @@ func (m *manager) bucketItems(bucketName string, goBack bool) {
 				m.bucketItems(m.currentLoc, true)
 			}
 		}
+
+		color.HiBlue("# OF RESULTS FOUND: %d", len(res.Result))
+
 		if len(res.Result) == 0 {
-			fmt.Fprintf(os.Stdout, "Invalid request.\n\n")
+			fmt.Fprintf(os.Stdout, color.RedString("No results found\n\n"))
 			m.bucketItems(m.lastLoc, false)
 			return
 		}
 
+		fmt.Fprintf(os.Stdout, fmt.Sprintf("\n%s\nKEYS IN BUCKET:%d\nB+ TREE DEPTH: %d\nINLINE BUCKETS: %d\n\n", color.HiBlueString("STATS"), res.Stats.KeyN, res.Stats.Depth, res.Stats.InlineBucketN))
+
 		for k, v := range res.Result {
+			item := item{}
 			if v == kval.Nestedbucket {
-				k = k + "*"
-				v = ""
+				color.Red("IS NESTED BUCKET")
+				item.Key = strings.TrimSpace(string(k)) + "*"
+				item.Value = v
+				item.Nested = true
+			} else {
+				item.Key = strings.TrimSpace(string(k))
+				item.Value = strings.TrimSpace(string(v))
 			}
-			items = append(items, item{Key: string(k), Value: string(v)})
+
+			items = append(items, item)
 		}
-		fmt.Fprintf(os.Stdout, "Bucket: %s\n", bucketName)
-		m.viewer.DumpBucketItems(m.bucket, items)
+
+		m.viewer.DumpBucketItems(os.Stdout, m.bucket, items)
 		m.rootBucket = false // success this far means we're not at ROOT
-		m.lastLoc = getQuery // so we can also set the query cache for paging
+		m.lastLoc = dbQuery  // so we can also set the query cache for paging
 		printHelpText()
 	}
 }
@@ -192,8 +261,8 @@ func (m *manager) connect(file string) {
 
 type dbDisplay struct{}
 
-func (d dbDisplay) DumpBuckets(bs []bucket) {
-	t := tablewriter.NewWriter(os.Stdout)
+func (d dbDisplay) DumpBuckets(w io.Writer, bs []bucket) {
+	t := tablewriter.NewWriter(w)
 	t.SetHeader([]string{"Buckets"})
 	for _, bucket := range bs {
 		row := []string{bucket.Name}
@@ -203,12 +272,22 @@ func (d dbDisplay) DumpBuckets(bs []bucket) {
 	t.Render()
 }
 
-func (d dbDisplay) DumpBucketItems(bucket string, items []item) {
-	t := tablewriter.NewWriter(os.Stdout)
+func (d dbDisplay) DumpBucketItems(w io.Writer, bucket string, items []item) {
+	color.Yellow("[BUCKET]: %s", bucket)
+	t := tablewriter.NewWriter(w)
 	t.SetHeader([]string{"Key", "Value"})
-	color.HiBlue("# of items: %d", len(items))
 	for _, i := range items {
-		row := []string{i.Key, i.Value}
+		row := []string{}
+		if i.Nested {
+			row = append(row, i.Key, "")
+		} else {
+			reader := bytes.NewReader([]byte(i.Value))
+			decoder := gob.NewDecoder(reader)
+			var bx htb.Box
+			decoder.Decode(&bx)
+			row = append(row, i.Key, spew.Sdump(bx))
+		}
+
 		t.Append(row)
 	}
 
