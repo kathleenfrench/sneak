@@ -42,6 +42,7 @@ var vpnSetupCmd = &cobra.Command{
 
 var vpnConnectCmd = &cobra.Command{
 	Use:     "connect",
+	Short:   "connect to the htb servers",
 	Aliases: []string{"start"},
 	Run: func(cmd *cobra.Command, args []string) {
 		if !openVPN.AlreadySetup() {
@@ -53,6 +54,7 @@ var vpnConnectCmd = &cobra.Command{
 
 var vpnUpdateCmd = &cobra.Command{
 	Use:     "update",
+	Short:   "change your openvpn config file",
 	Aliases: []string{"u", "change", "edit"},
 	Run: func(cmd *cobra.Command, args []string) {
 		if !openVPN.AlreadySetup() {
@@ -77,6 +79,7 @@ var vpnUpdateCmd = &cobra.Command{
 
 var vpnTestCmd = &cobra.Command{
 	Use:     "test",
+	Short:   "test your vpn connection",
 	Aliases: []string{"ping", "check"},
 	Run: func(cmd *cobra.Command, args []string) {
 		if !openVPN.AlreadySetup() {
