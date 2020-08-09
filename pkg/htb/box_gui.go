@@ -3,13 +3,20 @@ package htb
 import (
 	"errors"
 	"fmt"
+	"io/ioutil"
+	"os"
 	"time"
 
 	"github.com/asaskevich/govalidator"
 	"github.com/fatih/color"
 	"github.com/jedib0t/go-pretty/table"
+	"github.com/kathleenfrench/common/fs"
 	"github.com/kathleenfrench/common/gui"
+	"github.com/kathleenfrench/sneak/internal/config"
 	"github.com/kathleenfrench/sneak/internal/helpers"
+	"github.com/spf13/viper"
+
+	humanize "github.com/dustin/go-humanize"
 )
 
 var osOptions = []string{
@@ -74,11 +81,9 @@ func (b Box) validate() error {
 func CompletionColorizer(completed bool) string {
 	if completed {
 		return color.HiGreenString("pwnd")
-		// return fmt.Sprintf("pwnd: %s", emoji.Sprint(":white_check_mark:"))
 	}
 
 	return color.HiYellowString("incomplete")
-	// return fmt.Sprintf("pwnd: %s", emoji.Sprint(":x:"))
 }
 
 // DifficultyColorizer colorizes based on difficulty
@@ -129,22 +134,40 @@ func SelectBoxFromDropdown(boxes []Box) Box {
 	return selected
 }
 
-var boxActions = []string{
-	"activate",
-	"check connection",
-}
-
 // PrintBoxDataTable poutputs box data in a readable table in the terminal window
 func PrintBoxDataTable(box Box) {
 	data := []table.Row{
 		{"name", box.Name},
 		{"IP", box.IP},
 		{"description", box.Description},
+		{"hostname", box.Hostname},
+		{"os", box.Hostname},
+		{"difficulty", box.Difficulty},
+		{"added", humanize.Time(box.Created)},
+		{"last updated", humanize.Time(box.LastUpdated)},
 	}
 
 	helpers.Spacer()
-
 	gui.SideBySideTable(data, "HiRed")
+	helpers.Spacer()
+}
+
+const (
+	setToActive     = "set to active"
+	checkConnection = "check connection"
+	openNotes       = "open notes"
+	flags           = "flags"
+	returnToBoxes   = "return to other boxes"
+	quit            = "quit"
+)
+
+var boxActions = []string{
+	setToActive,
+	checkConnection,
+	openNotes,
+	flags,
+	returnToBoxes,
+	quit,
 }
 
 // SelectBoxActionsDropdown lists available actions with a single box or the ability to return to the 'main menu' of boxes
@@ -152,6 +175,66 @@ func SelectBoxActionsDropdown(box Box, boxes []Box) error {
 	PrintBoxDataTable(box)
 	selection := gui.SelectPromptWithResponse("select from the dropdown", boxActions, nil, true)
 
-	color.Red(selection)
+	switch selection {
+	case setToActive:
+		color.Red("TODO")
+	case checkConnection:
+		color.Red("TODO")
+	case openNotes:
+		note, err := checkForNoteFile(box.Name)
+		if err != nil {
+			return err
+		}
+
+		updatedNote := gui.TextEditorInputAndSave(fmt.Sprintf("update your notes on %s in markdown", box.Name), note, viper.GetString("default_editor"))
+
+		err = saveNoteFile(box.Name, updatedNote)
+		if err != nil {
+			return err
+		}
+
+		return SelectBoxActionsDropdown(box, boxes)
+	case flags:
+		color.Red("TODO")
+	case returnToBoxes:
+		return SelectBoxActionsDropdown(SelectBoxFromDropdown(boxes), boxes)
+	case quit:
+		os.Exit(0)
+	}
+
 	return nil
+}
+
+func saveNoteFile(boxName string, note string) error {
+	notesPath := config.GetNotesDirectory()
+	notesFilePath := fmt.Sprintf("%s/%s.md", notesPath, boxName)
+
+	err := ioutil.WriteFile(notesFilePath, []byte(note), 0644)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func checkForNoteFile(boxName string) (string, error) {
+	notesPath := config.GetNotesDirectory()
+	notesFilePath := fmt.Sprintf("%s/%s.md", notesPath, boxName)
+
+	// if the notes file already exists, read the text from the file and return it as a string to set a s adefault
+	if fs.FileExists(notesFilePath) {
+		note, err := ioutil.ReadFile(notesFilePath)
+		if err != nil {
+			return "", err
+		}
+
+		return string(note), nil
+	}
+
+	err := fs.CreateFile(notesFilePath)
+	if err != nil {
+		return "", err
+	}
+
+	return "", nil
 }
