@@ -86,7 +86,7 @@ func SafeWriteConfig() error {
 
 	exists := fs.FileExists(filepath)
 	if exists {
-		return nil
+		return verify(filepath)
 	}
 
 	gui.Info("popcorn", "creating your config file...", filepath)
@@ -103,10 +103,15 @@ func SafeWriteConfig() error {
 	preferredEditor := gui.GetUsersPreferredEditor("", true)
 	viper.Set("default_editor", preferredEditor)
 	viper.Set("data", dir)
+	viper.Set("webshort", defaultShortcuts)
 
 	// write config file
 	gui.Info("popcorn", "writing sneak defaults...", filepath)
 	return viper.WriteConfigAs(filepath)
+}
+
+var defaultShortcuts = map[string]string{
+	"htb": "https://app.hackthebox.eu/machines",
 }
 
 // Banner is the banner for sneak

@@ -40,6 +40,17 @@ var vpnSetupCmd = &cobra.Command{
 	},
 }
 
+var vpnConnectCmd = &cobra.Command{
+	Use:     "connect",
+	Aliases: []string{"start"},
+	Run: func(cmd *cobra.Command, args []string) {
+		if !openVPN.AlreadySetup() {
+			gui.ExitWithError("you have not setup openvpn yet with sneak - run 'sneak vpn setup'")
+		}
+
+	},
+}
+
 var vpnUpdateCmd = &cobra.Command{
 	Use:     "update",
 	Aliases: []string{"u", "change", "edit"},
@@ -78,4 +89,5 @@ func init() {
 	vpnCmd.AddCommand(vpnSetupCmd)
 	vpnCmd.AddCommand(vpnUpdateCmd)
 	vpnCmd.AddCommand(vpnTestCmd)
+	vpnCmd.AddCommand(vpnConnectCmd)
 }
