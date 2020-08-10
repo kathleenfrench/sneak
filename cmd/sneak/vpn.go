@@ -1,14 +1,19 @@
 package sneak
 
 import (
+	"context"
+	"fmt"
+
 	"github.com/fatih/color"
 	"github.com/kathleenfrench/common/gui"
+	"github.com/kathleenfrench/common/shell"
 	"github.com/kathleenfrench/sneak/internal/vpn"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
 
 var openVPN *vpn.OpenVPN
+var home string
 
 var vpnCmd = &cobra.Command{
 	Use:   "vpn",
@@ -49,6 +54,15 @@ var vpnConnectCmd = &cobra.Command{
 			gui.ExitWithError("you have not setup openvpn yet with sneak - run 'sneak vpn setup'")
 		}
 
+		vpnPath := fmt.Sprintf("%s/vpn.sh", home)
+		gui.Info("popcorn", "trying to connect...", vpnPath)
+		runner := shell.NewRunner()
+		connection, err := runner.Run(context.Background(), vpnPath)
+		if err != nil {
+			gui.ExitWithError(err)
+		}
+
+		fmt.Println(connection)
 	},
 }
 
