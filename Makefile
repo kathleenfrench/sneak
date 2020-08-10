@@ -80,7 +80,7 @@ dbweb: ## view database info on localhost:8080
 
 .PHONY: docker
 docker: ## build docker runner image
-	@DOCKER_BUILDKIT=1 docker build --no-cache --ssh default -t sneaker .
+	@DOCKER_BUILDKIT=1 docker build --ssh default -t sneaker .
 
 local_network := $(shell ifconfig | grep "inet " | grep -Fv 127.0.0.1 | awk '{print $$2}')
 
@@ -90,6 +90,7 @@ run: docker ## run sneak in a containerized environment
 		--privileged \
 		--sysctl net.ipv6.conf.all.disable_ipv6=0 \
 		--env LOCAL_NETWORK=$(local_network) \
+		-p 8118:8118 \
 		-it sneaker \
 		 /bin/sh
 

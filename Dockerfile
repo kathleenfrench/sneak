@@ -27,8 +27,8 @@ RUN mkdir -p /dev/net \
     && mknod /dev/net/tun c 10 200
 
 ## have to enable sudo for openvpn to work
-# RUN echo "$USER ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/$USER && \
-#     chmod 0440 /etc/sudoers.d/$USER
+RUN echo "$USER ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/$USER && \
+    chmod 0440 /etc/sudoers.d/$USER
 
 RUN mkdir -p -m 0600 ~/.ssh && ssh-keyscan github.com >> ~/.ssh/known_hosts
 
