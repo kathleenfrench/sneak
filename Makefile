@@ -80,7 +80,7 @@ dbweb: ## view database info on localhost:8080
 
 .PHONY: docker
 docker: ## build docker runner image
-	@DOCKER_BUILDKIT=1 docker build --no-cache -f Dockerfile.run --ssh default -t sneaker .
+	@DOCKER_BUILDKIT=1 docker build --no-cache --ssh default -t sneaker .
 
 local_network := $(shell ifconfig | grep "inet " | grep -Fv 127.0.0.1 | awk '{print $$2}')
 
