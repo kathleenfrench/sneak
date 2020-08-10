@@ -2,7 +2,6 @@
 set -e
 
 START="$1"
-OPENVPN_CONF="$2"
 echo "starting... $START"
 
 if [ -f "$OPENVPN_CONF" ]; then
