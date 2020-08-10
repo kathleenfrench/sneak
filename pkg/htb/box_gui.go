@@ -221,6 +221,10 @@ var boxActions = []string{
 
 // SelectBoxActionsDropdown lists available actions with a single box or the ability to return to the 'main menu' of boxes
 func (bg *boxGUI) SelectBoxActionsDropdown(db *bolthold.Store, box Box, boxes []Box) error {
+	if box.Active {
+		bg.activeBox = box.Name
+	}
+
 	if !bg.singleBoxTableShown {
 		PrintBoxDataTable(box)
 		boxActions = append([]string{seeTable}, boxActions...)
@@ -241,6 +245,7 @@ func (bg *boxGUI) SelectBoxActionsDropdown(db *bolthold.Store, box Box, boxes []
 			switch setInactive {
 			case true:
 				box.Active = false
+				bg.activeBox = ""
 			default:
 				return bg.SelectBoxActionsDropdown(db, box, boxes)
 			}
@@ -250,6 +255,7 @@ func (bg *boxGUI) SelectBoxActionsDropdown(db *bolthold.Store, box Box, boxes []
 			switch setActive {
 			case true:
 				box.Active = true
+				bg.activeBox = box.Name
 			default:
 				return bg.SelectBoxActionsDropdown(db, box, boxes)
 			}
