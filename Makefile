@@ -77,10 +77,29 @@ dbweb: ## view database info on localhost:8080
 	@go get -u github.com/evnix/boltdbweb
 	@boltdbweb -d $(HOME)/.sneak/sneak.db
 
+.PHONY: image
+image: ## buids a docker image of only the sneak binary
+	@docker build -f dist/sneak/Dockerfile -t docker.io/kfrench/sneak:$(VERSION) .
+	@docker tag kfrench/sneak:$(VERSION) docker.io/kfrench/sneak:latest
+
+.PHONY: pushbin
+pushbin: image ## pushes the sneak image to docker
+	@docker push docker.io/kfrench/sneak:$(VERSION)
+	@docker push docker.io/kfrench/sneak:latest
 
 .PHONY: docker
-docker: ## build docker runner image
-	@DOCKER_BUILDKIT=1 docker build --ssh default -t sneaker .
+docker: ## build docker sneaker image
+	@DOCKER_BUILDKIT=1 docker build -f dist/sneaker/Dockerfile --ssh default -t docker.io/kfrench/sneaker:$(VERSION) .
+	@docker tag docker.io/kfrench/sneaker:$(VERSION) docker.io/kfrench/sneaker:latest
+
+.PHONY: push
+push: ## push the docker sneaker image
+	@docker push docker.io/kfrench/sneaker:$(VERSION)
+	@docker push docker.io/kfrench/sneaker:latest
+
+.PHONY: dev
+dev: ## build a docker image for local development of sneak binary and sneaker env
+	@docker build -f Dockerfile.dev -t sneaker .
 
 local_network := $(shell ifconfig | grep "inet " | grep -Fv 127.0.0.1 | awk '{print $$2}')
 

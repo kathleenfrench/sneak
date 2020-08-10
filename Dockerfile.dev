@@ -1,9 +1,22 @@
 # syntax=docker/dockerfile:experimental
 
+ARG SNEAK_VERSION
 ARG LOCAL_NETWORK=172.16.0.0/12
 ARG USER=sneak
 ARG UID=1000
 ARG GID=1000
+
+FROM golang:alpine as bin
+ARG SNEAK_VERSION
+ENV GO111MODULE=on
+
+RUN apk update \
+    && apk add gcc libc-dev
+
+WORKDIR /go/src/github.com/kathleenfrench/sneak
+COPY . .
+
+RUN go build -mod=readonly -a -ldflags "-X github.com/kathleenfrench/sneak.Version=$SNEAK_VERSION" -o app
 
 FROM golang:alpine as base
 ARG USER
@@ -27,22 +40,20 @@ RUN mkdir -p /dev/net \
     && mknod /dev/net/tun c 10 200
 
 ## have to enable sudo for openvpn to work
-RUN echo "$USER ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/$USER && \
-    chmod 0440 /etc/sudoers.d/$USER
+RUN echo "$USER ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/$USER \
+    && chmod 0440 /etc/sudoers.d/$USER \
+    && mkdir -p -m 0600 ~/.ssh \
+    && ssh-keyscan github.com >> ~/.ssh/known_hosts
 
-RUN mkdir -p -m 0600 ~/.ssh && ssh-keyscan github.com >> ~/.ssh/known_hosts
-
-WORKDIR /go/src/github.com/kathleenfrench/sneak
-RUN --mount=type=ssh git clone git@github.com:kathleenfrench/sneak.git . \
-    && go install
+COPY --from=bin /go/src/github.com/kathleenfrench/sneak/app /go/bin/sneak
 
 FROM base as runner
 ARG LOCAL_NETWORK
 ARG USER
 ENV LOCAL_NETWORK ${LOCAL_NETWORK}
-
 USER ${USER}
 
 WORKDIR /home/${USER}
 COPY files ./
+
 EXPOSE 8118 4444
