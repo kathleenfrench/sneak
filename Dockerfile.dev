@@ -4,18 +4,6 @@ ARG USER=sneak
 ARG UID=1000
 ARG GID=1000
 
-# FROM golang:alpine as bin
-# ARG SNEAK_VERSION
-# ENV GO111MODULE=on
-
-# RUN apk update \
-#     && apk add gcc libc-dev
-
-# WORKDIR /go/src/github.com/kathleenfrench/sneak
-# COPY . .
-
-# RUN go build -mod=readonly -a -ldflags "-X github.com/kathleenfrench/sneak.Version=$SNEAK_VERSION" -o app
-
 FROM golang:alpine as base
 ARG USER
 ARG UID
