@@ -20,7 +20,9 @@ var newBoxCmd = &cobra.Command{
 	Short:   "add a new box",
 	Aliases: []string{"add", "a"},
 	Run: func(cmd *cobra.Command, args []string) {
-		box, err := htb.PromptUserForBoxData()
+		nb := htb.NewBoxGUI()
+
+		box, err := nb.PromptUserForBoxData()
 		if err != nil {
 			gui.ExitWithError(err)
 		}
@@ -44,9 +46,16 @@ var listBoxesCmd = &cobra.Command{
 			gui.ExitWithError(err)
 		}
 
-		selection := htb.SelectBoxFromDropdown(boxes)
+		if len(boxes) == 0 {
+			gui.Warn("you don't have any boxes yet! run `sneak box add` to get started", nil)
+			return
+		}
 
-		if err = htb.SelectBoxActionsDropdown(db, selection, boxes); err != nil {
+		nb := htb.NewBoxGUI()
+
+		selection := nb.SelectBoxFromDropdown(boxes)
+
+		if err = nb.SelectBoxActionsDropdown(db, selection, boxes); err != nil {
 			gui.ExitWithError(err)
 		}
 	},

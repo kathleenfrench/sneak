@@ -20,6 +20,26 @@ import (
 	humanize "github.com/dustin/go-humanize"
 )
 
+// BoxGUI is an interface for methods managing the box GUI
+type BoxGUI interface {
+	SelectBoxFromDropdown(boxes []Box) Box
+	SelectBoxActionsDropdown(db *bolthold.Store, box Box, boxes []Box) error
+	PromptUserForBoxData() (Box, error)
+}
+
+type boxGUI struct {
+	singleBoxTableShown bool
+	activeBox           string
+}
+
+// NewBoxGUI instantiates a new box gui interface
+func NewBoxGUI() BoxGUI {
+	return &boxGUI{
+		singleBoxTableShown: false,
+		activeBox:           "",
+	}
+}
+
 var osOptions = []string{
 	"linux",
 	"windows",
@@ -36,7 +56,7 @@ var difficulties = []string{
 }
 
 // PromptUserForBoxData prompts the user for values about the htb machine they want to add
-func PromptUserForBoxData() (Box, error) {
+func (bg *boxGUI) PromptUserForBoxData() (Box, error) {
 	box := Box{
 		Name:        gui.InputPromptWithResponse("what is the name of the box?", "", true),
 		IP:          gui.InputPromptWithResponse("what is its IP?", "", true),
@@ -129,7 +149,7 @@ func makeGuiBoxMappings(boxes []Box) (keys []string, mapping map[string]Box) {
 }
 
 // SelectBoxFromDropdown lists a collection of boxes to choose from in a terminal dropdown
-func SelectBoxFromDropdown(boxes []Box) Box {
+func (bg *boxGUI) SelectBoxFromDropdown(boxes []Box) Box {
 	boxNames, boxMap := makeGuiBoxMappings(boxes)
 	selection := gui.SelectPromptWithResponse("select a box", boxNames, nil, false)
 	selected := boxMap[selection]
@@ -143,7 +163,7 @@ func PrintBoxDataTable(box Box) {
 		{"IP", box.IP},
 		{"description", box.Description},
 		{"hostname", box.Hostname},
-		{"os", box.Hostname},
+		{"os", box.OS},
 		{"difficulty", box.Difficulty},
 		{"active", box.Active},
 		{"completed", box.Completed},
@@ -186,6 +206,7 @@ const (
 	flags              = "flags"
 	returnToBoxes      = "return to other boxes"
 	quit               = "quit"
+	seeTable           = "show info table"
 )
 
 var boxActions = []string{
@@ -199,11 +220,23 @@ var boxActions = []string{
 }
 
 // SelectBoxActionsDropdown lists available actions with a single box or the ability to return to the 'main menu' of boxes
-func SelectBoxActionsDropdown(db *bolthold.Store, box Box, boxes []Box) error {
-	PrintBoxDataTable(box)
+func (bg *boxGUI) SelectBoxActionsDropdown(db *bolthold.Store, box Box, boxes []Box) error {
+	if box.Active {
+		bg.activeBox = box.Name
+	}
+
+	if !bg.singleBoxTableShown {
+		PrintBoxDataTable(box)
+		boxActions = append([]string{seeTable}, boxActions...)
+	}
+
+	bg.singleBoxTableShown = true
 	selection := gui.SelectPromptWithResponse("select from the dropdown", boxActions, nil, true)
 
 	switch selection {
+	case seeTable:
+		PrintBoxDataTable(box)
+		return bg.SelectBoxActionsDropdown(db, box, boxes)
 	case toggleActiveStatus:
 		switch box.Active {
 		case true:
@@ -212,8 +245,9 @@ func SelectBoxActionsDropdown(db *bolthold.Store, box Box, boxes []Box) error {
 			switch setInactive {
 			case true:
 				box.Active = false
+				bg.activeBox = ""
 			default:
-				return SelectBoxActionsDropdown(db, box, boxes)
+				return bg.SelectBoxActionsDropdown(db, box, boxes)
 			}
 		default:
 			color.Red("%s is not currently set to active", box.Name)
@@ -221,8 +255,9 @@ func SelectBoxActionsDropdown(db *bolthold.Store, box Box, boxes []Box) error {
 			switch setActive {
 			case true:
 				box.Active = true
+				bg.activeBox = box.Name
 			default:
-				return SelectBoxActionsDropdown(db, box, boxes)
+				return bg.SelectBoxActionsDropdown(db, box, boxes)
 			}
 		}
 
@@ -240,9 +275,16 @@ func SelectBoxActionsDropdown(db *bolthold.Store, box Box, boxes []Box) error {
 			return err
 		}
 
-		return SelectBoxActionsDropdown(db, box, boxes)
+		return bg.SelectBoxActionsDropdown(db, box, boxes)
 	case checkConnection:
-		color.Red("TODO")
+		err := helpers.SudoPing(box.IP)
+		if err != nil {
+			gui.Warn("uh oh, that box couldn't be reached! verify that the machine is active and your VPN connection is still intact", box.IP)
+		} else {
+			gui.Info("+1", "reachable!", box.IP)
+		}
+
+		return bg.SelectBoxActionsDropdown(db, box, boxes)
 	case openNotes:
 		note, err := checkForNoteFile(box.Name)
 		if err != nil {
@@ -256,7 +298,7 @@ func SelectBoxActionsDropdown(db *bolthold.Store, box Box, boxes []Box) error {
 			return err
 		}
 
-		return SelectBoxActionsDropdown(db, box, boxes)
+		return bg.SelectBoxActionsDropdown(db, box, boxes)
 	case editDescription:
 		box.Description = gui.InputPromptWithResponse("provide a new description", "", true)
 		// write the change to the db
@@ -271,7 +313,7 @@ func SelectBoxActionsDropdown(db *bolthold.Store, box Box, boxes []Box) error {
 			return err
 		}
 
-		return SelectBoxActionsDropdown(db, box, boxes)
+		return bg.SelectBoxActionsDropdown(db, box, boxes)
 	case flags:
 		printFlagTable(box.Flags)
 		addOrUpdate := gui.ConfirmPrompt("do you want to update any flag values?", "", false, true)
@@ -299,10 +341,10 @@ func SelectBoxActionsDropdown(db *bolthold.Store, box Box, boxes []Box) error {
 
 			fallthrough
 		default:
-			return SelectBoxActionsDropdown(db, box, boxes)
+			return bg.SelectBoxActionsDropdown(db, box, boxes)
 		}
 	case returnToBoxes:
-		return SelectBoxActionsDropdown(db, SelectBoxFromDropdown(boxes), boxes)
+		return bg.SelectBoxActionsDropdown(db, bg.SelectBoxFromDropdown(boxes), boxes)
 	case quit:
 		os.Exit(0)
 	}
