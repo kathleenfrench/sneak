@@ -14,8 +14,6 @@ import (
 
 // AlreadySetup is a helper to check whether or not a user's openvpn configs have already been setup
 func (o *OpenVPN) AlreadySetup() bool {
-	o.envCheck()
-
 	if fs.FileExists(o.Filepath) && checkForPrivoxyConfig() {
 		return true
 	}
@@ -23,17 +21,8 @@ func (o *OpenVPN) AlreadySetup() bool {
 	return false
 }
 
-func (o *OpenVPN) envCheck() {
-	openVPNConfigPath := os.Getenv("OPENVPN_CONF")
-	if len(openVPNConfigPath) == 0 {
-		os.Setenv("OPENVPN_CONF", o.Filepath)
-	}
-}
-
 // Setup creates the openvpn file at the expected location for sneak and prompts the user for its contents, then writes them to the file
 func (o *OpenVPN) Setup(defaultEditor string) error {
-	o.envCheck()
-
 	err := o.createConfigFile()
 	if err != nil {
 		return err

@@ -2,6 +2,7 @@
 set -e
 
 START="$1"
+OPENVPN_CONF=$(sneak config ls | grep openvpn_filepath | awk '{print $2}')
 echo "starting... $START"
 
 if [ -f "$OPENVPN_CONF" ]; then
