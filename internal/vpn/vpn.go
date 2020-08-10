@@ -2,7 +2,12 @@ package vpn
 
 import (
 	"net"
+	"os"
+	"os/exec"
 
+	"github.com/kathleenfrench/common/fs"
+	"github.com/kathleenfrench/common/shell"
+	"github.com/mitchellh/go-homedir"
 	"github.com/spf13/viper"
 )
 
@@ -13,12 +18,21 @@ type OpenVPN struct {
 	LocalNetwork string
 	IP           net.IP
 	Port         uint16
+	home         string
+	runner       shell.Runner
 }
 
 // NewOpenVPNClient returns a new wrapper for managing the openvpn client
 func NewOpenVPNClient() (*OpenVPN, error) {
+	home, err := homedir.Dir()
+	if err != nil {
+		return nil, err
+	}
+
 	openvpn := &OpenVPN{
 		Filepath: viper.GetString("openvpn_filepath"),
+		runner:   shell.NewRunner(),
+		home:     home,
 	}
 
 	ln, err := localNetwork()
@@ -33,6 +47,34 @@ func NewOpenVPNClient() (*OpenVPN, error) {
 
 // Connect establishes a connection with the vpn client
 func (o *OpenVPN) Connect() error {
+	if !fs.FileExists("/tmp/ovpn_path") {
+		err := fs.CreateFile("/tmp/ovpn_path")
+		if err != nil {
+			return err
+		}
+
+		uname, err := os.OpenFile("/tmp/ovpn_path", os.O_APPEND|os.O_WRONLY, 0644)
+		if err != nil {
+			return err
+		}
+
+		defer uname.Close()
+		_, err = uname.WriteString(o.Filepath)
+		if err != nil {
+			return err
+		}
+	}
+
+	cmd := &exec.Cmd{
+		Path:   "/opt/vpn",
+		Args:   []string{},
+		Stdout: os.Stdout,
+		Stderr: os.Stdin,
+	}
+
+	cmd.Start()
+	cmd.Wait()
+
 	return nil
 }
 

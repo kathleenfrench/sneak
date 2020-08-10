@@ -1,12 +1,13 @@
 package sneak
 
 import (
-	"context"
 	"fmt"
+	"io/ioutil"
+	"os/exec"
+	"strings"
 
 	"github.com/fatih/color"
 	"github.com/kathleenfrench/common/gui"
-	"github.com/kathleenfrench/common/shell"
 	"github.com/kathleenfrench/sneak/internal/vpn"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -54,16 +55,69 @@ var vpnConnectCmd = &cobra.Command{
 			gui.ExitWithError("you have not setup openvpn yet with sneak - run 'sneak vpn setup'")
 		}
 
-		vpnPath := fmt.Sprintf("%s/vpn.sh", home)
-		gui.Info("popcorn", "trying to connect...", vpnPath)
-		runner := shell.NewRunner()
-		connection, err := runner.Run(context.Background(), vpnPath)
+		// ctx := context.Background()
+		// runner := shell.NewRunner()
+		err := openVPN.Connect()
 		if err != nil {
 			gui.ExitWithError(err)
 		}
 
-		fmt.Println(connection)
+		// vpnPath := fmt.Sprintf("%s/vpn", home)
+		// gui.Info("popcorn", "trying to connect...", vpnPath)
+		// v := viper.GetViper()
+		// color.Green("open vpn config filepath at %s", v.GetString("openvpn_filepath"))
+
+		// gui.Spin.Start()
+		// // vpnscript := fmt.Sprintf("sudo %s %s", vpnPath, v.GetString("openvpn_filepath"))
+		// // logs := execute(exec.Command("/bin/bash", "-c", "sudo", vpnPath, v.GetString("openvpn_filepath")))
+		// logs, err := exec.Command("/bin/bash", "-c", vpnPath, v.GetString("openvpn_filepath")).CombinedOutput()
+		// gui.Spin.Stop()
+		// if err != nil {
+		// 	gui.ExitWithError(string(logs))
+		// }
+
+		// color.Green(string(logs))
+		// logs, err := runner.BashExec(vpnscript)
+		// if err != nil {
+		// 	gui.ExitWithError(err)
+		// }
 	},
+}
+
+func execute(cmd *exec.Cmd) string {
+	var out string
+
+	if cmd == nil {
+		return out
+	}
+
+	stdout, err := cmd.StdoutPipe()
+	if err != nil {
+		out = color.HiRedString(fmt.Sprintf("[ERROR]: %s", err))
+		return out
+	}
+
+	err = cmd.Start()
+	if err != nil {
+		out = color.HiRedString(fmt.Sprintf("[ERROR]: %s", err))
+		return out
+	}
+
+	res, err := ioutil.ReadAll(stdout)
+	if err != nil {
+		out = color.HiRedString(fmt.Sprintf("[ERROR]: %s", err))
+		return out
+	}
+
+	out += string(res)
+
+	err = cmd.Wait()
+	if err != nil {
+		out = color.HiRedString(fmt.Sprintf("[ERROR]: %s", err))
+		return out
+	}
+
+	return strings.TrimSpace(out)
 }
 
 var vpnUpdateCmd = &cobra.Command{

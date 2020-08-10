@@ -44,6 +44,8 @@ ENV LOCAL_NETWORK ${LOCAL_NETWORK}
 USER ${USER}
 
 WORKDIR /home/${USER}
-COPY files ./
+COPY files/config.default .
+COPY files/vpn /opt/vpn
+ENV PATH="${PATH}:/opt/vpn"
 
 EXPOSE 8118 4444

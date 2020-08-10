@@ -44,6 +44,15 @@ build: vendor ${BUILD_OUTPUT_DIR} ## build the sneak binary
 		$(GO) build $(GO_BUILD_FLAGS)
 	@echo "${NAME} bin compiled!"
 
+.PHONY: dev-build
+dev-build: vendor ${BUILD_OUTPUT_DIR} ## build the sneak binary for linux for easier dev on running sneaker container locally
+	@echo "compiling ${NAME} as linux distro for mounting the bin in local-dev..."
+	@export GOOS=linux GOARCH=$(GOARCH) && \
+		export GO111MODULE=on && \
+		export CGO_ENABLED=0 && \
+		$(GO) build $(GO_BUILD_FLAGS)
+	@echo "${NAME} bin compiled!"
+
 .PHONY: install
 install: build ## install the sneak binary to /usr/local/bin
 	@echo "installing sneak to ${INSTALL_LOCATION}"
@@ -98,7 +107,7 @@ push: docker ## push the docker sneaker image
 	@docker push docker.io/kfrench/sneaker:latest
 
 .PHONY: dev
-dev: ## build a docker image for local development of sneak binary and sneaker env
+dev: dev-build ## build a docker image for local development of sneak binary and sneaker env
 	@DOCKER_BUILDKIT=1 docker build -f Dockerfile.dev -t sneaker .
 
 local_network := $(shell ifconfig | grep "inet " | grep -Fv 127.0.0.1 | awk '{print $$2}')
@@ -109,6 +118,7 @@ run: dev ## run sneak in a containerized environment
 		--privileged \
 		--sysctl net.ipv6.conf.all.disable_ipv6=0 \
 		--env LOCAL_NETWORK=$(local_network) \
+		-v $(CWD)/build/sneak:/go/bin/sneak \
 		-p 8118:8118 \
 		-it sneaker \
 		 /bin/sh

@@ -24,7 +24,7 @@ var configListCmd = &cobra.Command{
 	Use:     "list",
 	Aliases: []string{"ls", "show", "view"},
 	Short:   "view your current sneak configs",
-	Args:    cobra.MaximumNArgs(0),
+	Args:    cobra.ExactArgs(0),
 	Run: func(cmd *cobra.Command, args []string) {
 		out, err := exec.BashExec(fmt.Sprintf("cat %s", viper.ConfigFileUsed()))
 		if err != nil {
@@ -32,6 +32,21 @@ var configListCmd = &cobra.Command{
 		}
 
 		color.HiBlue(out)
+	},
+}
+
+var configGetCmd = &cobra.Command{
+	Use:     "get",
+	Aliases: []string{"g"},
+	Short:   "get a specific config value",
+	Args:    cobra.ExactArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		v := viper.GetViper()
+		if v.IsSet(args[0]) {
+			color.Green("%v", v.Get(args[0]))
+		} else {
+			color.Red("no value set for key %s!", args[0])
+		}
 	},
 }
 
@@ -62,4 +77,5 @@ func init() {
 	configCmd.AddCommand(configListCmd)
 	configCmd.AddCommand(configUpdateCmd)
 	configCmd.AddCommand(configDelCmd)
+	configCmd.AddCommand(configGetCmd)
 }

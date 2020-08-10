@@ -6,7 +6,6 @@ import (
 	"io/ioutil"
 	"os"
 
-	"github.com/kathleenfrench/common/exec"
 	"github.com/kathleenfrench/common/fs"
 	"github.com/kathleenfrench/common/gui"
 	"github.com/mitchellh/go-homedir"
@@ -14,7 +13,7 @@ import (
 
 // AlreadySetup is a helper to check whether or not a user's openvpn configs have already been setup
 func (o *OpenVPN) AlreadySetup() bool {
-	if fs.FileExists(o.Filepath) && checkForPrivoxyConfig() {
+	if fs.FileExists(o.Filepath) && o.checkForPrivoxyConfig() {
 		return true
 	}
 
@@ -34,8 +33,13 @@ func (o *OpenVPN) Setup(defaultEditor string) error {
 		gui.ExitWithError(err)
 	}
 
-	// create privoxy config from default
-	err = createFunctionalPrivoxyConfig()
+	// TODO: find out why 'wrtiefile' is not respecting permissions when set to 0777 and chmod is required
+	err = os.Chmod(o.Filepath, 0777)
+	if err != nil {
+		gui.ExitWithError(err)
+	}
+
+	err = o.createFunctionalPrivoxyConfig()
 	if err != nil {
 		return err
 	}
@@ -43,8 +47,8 @@ func (o *OpenVPN) Setup(defaultEditor string) error {
 	return nil
 }
 
-func createFunctionalPrivoxyConfig() error {
-	whoami, err := exec.BashExec("whoami")
+func (o *OpenVPN) createFunctionalPrivoxyConfig() error {
+	whoami, err := o.runner.BashExec("whoami")
 	if err != nil {
 		return err
 	}
@@ -90,16 +94,16 @@ func createFunctionalPrivoxyConfig() error {
 	return nil
 }
 
-func checkForPrivoxyConfig() bool {
-	home, err := homedir.Dir()
-	if err != nil {
-		gui.ExitWithError(err)
-	}
-
-	privoxyConfig := fmt.Sprintf("%s/config", home)
+func (o *OpenVPN) checkForPrivoxyConfig() bool {
+	privoxyConfig := fmt.Sprintf("%s/config", o.home)
 	if fs.FileExists(privoxyConfig) {
 		return true
 	}
 
-	return false
+	err := o.createFunctionalPrivoxyConfig()
+	if err != nil {
+		return false
+	}
+
+	return true
 }
