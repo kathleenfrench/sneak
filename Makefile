@@ -99,7 +99,7 @@ push: docker ## push the docker sneaker image
 
 .PHONY: dev
 dev: ## build a docker image for local development of sneak binary and sneaker env
-	@docker build -f Dockerfile.dev -t sneaker .
+	@DOCKER_BUILDKIT=1 docker build -f Dockerfile.dev -t sneaker .
 
 local_network := $(shell ifconfig | grep "inet " | grep -Fv 127.0.0.1 | awk '{print $$2}')
 
