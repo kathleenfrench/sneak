@@ -14,6 +14,7 @@ type Settings struct {
 	DBPath          string `yaml:"data"`
 	Home            string
 	WebShortcuts    map[string]string `yaml:"webshort"`
+	HTBNetworkIP    string            `yaml:"htb_network_ip"` // https://www.hackthebox.eu/home/htb/access
 }
 
 // Parse unmarshals the viper configs into the sneak settings struct

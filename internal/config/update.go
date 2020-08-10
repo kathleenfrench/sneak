@@ -31,6 +31,10 @@ func (s *Settings) UpdateSettings() error {
 		s.viper.Set("webshort", s.WebShortcuts)
 	}
 
+	if s.HTBNetworkIP != "" {
+		s.viper.Set("htb_network_ip", s.HTBNetworkIP)
+	}
+
 	s.viper.MergeInConfig()
 	s.viper.SetConfigFile(cfgFile)
 	s.viper.SetConfigType(filepath.Ext(cfgFile))
@@ -72,6 +76,10 @@ func UpdateSettingsPrompt(viperSettings map[string]interface{}) error {
 	switch choice {
 	case "default_editor":
 		changedValue = gui.GetUsersPreferredEditor("", true)
+		v.Set(choice, changedValue)
+	case "htb_network_ip":
+		fmt.Println(htbNetworkIPHelpText)
+		changedValue = gui.InputPromptWithResponse("what is your HTB Lab Network IPv4?", "", true)
 		v.Set(choice, changedValue)
 	case "webshort":
 		shorts := make(map[string]string)
@@ -131,5 +139,21 @@ func verify(filepath string) error {
 		viper.Set("webshort", defaultShortcuts)
 	}
 
+	if preCheck.HTBNetworkIP == "" {
+		fmt.Println(htbNetworkIPHelpText)
+		htbIP := gui.InputPromptWithResponse("what is your HTB Lab Network IPv4?", "", true)
+		viper.Set("htb_network_ip", htbIP)
+	}
+
 	return viper.WriteConfigAs(filepath)
 }
+
+var htbNetworkIPHelpText = color.YellowString(`
+your HTB lab access network information can be found at:
+https://www.hackthebox.eu/home/htb/access
+
+**important**: whenever you change servers you will
+need to re-download your connection pack and update
+the .ovpn file in sneak as well as the 'HTB Network IPv4'
+value used by sneak to test your connection.
+`)

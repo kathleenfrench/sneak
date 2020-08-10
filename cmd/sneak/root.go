@@ -92,11 +92,6 @@ func init() {
 
 	initGlobalFlags()
 
-	configCmd.AddCommand(configListCmd)
-	configCmd.AddCommand(configSetCmd)
-	configCmd.AddCommand(configUpdateCmd)
-	configCmd.AddCommand(configDelCmd)
-
 	rootCmd.AddCommand(configCmd)
 	rootCmd.AddCommand(dbCmd)
 	rootCmd.AddCommand(boxSubCmd)
