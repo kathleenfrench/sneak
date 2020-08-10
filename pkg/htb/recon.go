@@ -21,3 +21,11 @@ type Vuln struct {
 	Script string `yaml:"script"`
 	Notes  string `yaml:"notes"`
 }
+
+type task struct {
+	name     string
+	command  string
+	running  bool
+	complete bool
+	outPath  string
+}

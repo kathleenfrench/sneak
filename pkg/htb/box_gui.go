@@ -368,10 +368,16 @@ func (bg *boxGUI) SelectBoxActionsDropdown(db *bolthold.Store, box Box, boxes []
 }
 
 func saveNoteFile(boxName string, note string) error {
-	notesPath := config.GetNotesDirectory()
-	notesFilePath := fmt.Sprintf("%s/%s.md", notesPath, boxName)
+	notesPath := fmt.Sprintf("%s/%s", config.GetNotesDirectory(), boxName)
 
-	err := ioutil.WriteFile(notesFilePath, []byte(note), 0644)
+	// create note directory for that box if it doesn't exist
+	err := fs.CreateDir(notesPath)
+	if err != nil {
+		return fmt.Errorf("there was an error creating the notes directory for %s - %w", boxName, err)
+	}
+
+	notesFilePath := fmt.Sprintf("%s/main.md", notesPath)
+	err = ioutil.WriteFile(notesFilePath, []byte(note), 0644)
 	if err != nil {
 		return err
 	}
@@ -380,8 +386,8 @@ func saveNoteFile(boxName string, note string) error {
 }
 
 func checkForNoteFile(boxName string) (string, error) {
-	notesPath := config.GetNotesDirectory()
-	notesFilePath := fmt.Sprintf("%s/%s.md", notesPath, boxName)
+	notesPath := fmt.Sprintf("%s/%s", config.GetNotesDirectory(), boxName)
+	notesFilePath := fmt.Sprintf("%s/main.md", notesPath)
 
 	// if the notes file already exists, read the text from the file and return it as a string to set a s adefault
 	if fs.FileExists(notesFilePath) {
@@ -393,7 +399,13 @@ func checkForNoteFile(boxName string) (string, error) {
 		return string(note), nil
 	}
 
-	err := fs.CreateFile(notesFilePath)
+	// create the directory if it doesn't exist yet
+	err := fs.CreateDir(notesPath)
+	if err != nil {
+		return "", err
+	}
+
+	err = fs.CreateFile(notesFilePath)
 	if err != nil {
 		return "", err
 	}
