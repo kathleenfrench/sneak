@@ -3,11 +3,11 @@ package config
 import (
 	"fmt"
 	"path/filepath"
-	"reflect"
 	"strings"
 
 	"github.com/fatih/color"
 	"github.com/kathleenfrench/common/gui"
+	"github.com/kathleenfrench/sneak/internal/helpers"
 	"github.com/spf13/viper"
 )
 
@@ -25,6 +25,10 @@ func (s *Settings) UpdateSettings() error {
 
 	if s.DefaultEditor != "" {
 		s.viper.Set("default_editor", s.DefaultEditor)
+	}
+
+	if s.WebShortcuts != nil {
+		s.viper.Set("webshort", s.WebShortcuts)
 	}
 
 	s.viper.MergeInConfig()
@@ -45,10 +49,15 @@ func filterForChangeableConfigs(keys []string) []string {
 		case "useviper", "cfg_dir":
 			break
 		default:
+			if strings.Contains(k, "webshort.") {
+				break
+			}
+
 			eligible = append(eligible, k)
 		}
 	}
 
+	eligible = append(eligible, "webshort")
 	return eligible
 }
 
@@ -59,53 +68,39 @@ func UpdateSettingsPrompt(viperSettings map[string]interface{}) error {
 	v := viper.GetViper()
 	keys := filterForChangeableConfigs(viper.AllKeys())
 	choice := gui.SelectPromptWithResponse("which config value do you want to change?", keys, nil, false)
-	configType := reflect.TypeOf(v.Get(choice))
 
-	switch configType.Kind() {
-	case reflect.String:
-		switch choice {
-		case "default_editor":
-			changedValue = gui.GetUsersPreferredEditor("", true)
+	switch choice {
+	case "default_editor":
+		changedValue = gui.GetUsersPreferredEditor("", true)
+		v.Set(choice, changedValue)
+	case "webshort":
+		shorts := make(map[string]string)
+		err := viper.UnmarshalKey("webshort", &shorts)
+		if err != nil {
+			gui.ExitWithError(err)
+		}
+
+		editExisting := gui.ConfirmPrompt("do you want to modify an existing url?", "", false, true)
+		if editExisting {
+			shortKeys := helpers.GetKeysFromMap(shorts)
+			editWhich := gui.SelectPromptWithResponse("which do you want to change?", shortKeys, nil, false)
+			changedValue = gui.InputPromptWithResponse(fmt.Sprintf("what do you want to change %s to?", editWhich), "", true)
+			color.Green("setting %s", fmt.Sprintf("webshort.%s", editWhich))
+			v.Set(fmt.Sprintf("webshort.%s", editWhich), changedValue)
+		} else {
+			target, url := addNewWebShortcut()
+			v.Set(target, url)
+			changedValue = url
+		}
+	default:
+		switch strings.Contains(choice, ".") {
+		case true:
+			color.Red("TODO")
 		default:
 			changedValue = gui.InputPromptWithResponse(fmt.Sprintf("what do you want to change %s to?", choice), fmt.Sprintf("%v", v.Get(choice)), true)
-		}
-	case reflect.Int, reflect.Bool:
-		changedValue = gui.InputPromptWithResponse(fmt.Sprintf("what do you want to change %s to?", choice), fmt.Sprintf("%v", v.Get(choice)), true)
-	default:
-		// prompt for changing one of the existing settings as a map/map interface, etc.
-		switch choice {
-		// case "box_ips":
-		// 	ips := make(map[string]string)
-		// 	err := viper.UnmarshalKey(choice, &ips)
-		// 	if err != nil {
-		// 		return err
-		// 	}
-
-		// 	var newIP string
-		// 	editExisting := gui.ConfirmPrompt("do you want to modify an existing IP?", "", false, true)
-		// 	if editExisting {
-		// 		shortKeys := extract.KeysFromMapString(ips)
-		// 		editWhich := gui.SelectPromptWithResponse("which do you want to change?", shortKeys, nil, false)
-		// 		newIP = gui.InputPromptWithResponse(fmt.Sprintf("what do you want to change %s to?", editWhich), "", true)
-		// 		choice = fmt.Sprintf("box_ips.%s", editWhich)
-		// 	} else {
-		// 		// add new box IP
-		// 		boxName := gui.InputPromptWithResponse("what is the name of the new box?", "", false)
-		// 		ip := gui.InputPromptWithResponse(fmt.Sprintf("what is the IP for %s?", boxName), "", false)
-		// 		choice = fmt.Sprintf("box_ips.%s", boxName)
-		// 		newIP = ip
-		// 	}
-
-		// 	if !govalidator.IsIP(newIP) {
-		// 		badIPErr := fmt.Sprintf("%s is not a valid IP!", newIP)
-		// 		gui.ExitWithError(errors.New(badIPErr))
-		// 	}
-
-		// 	changedValue = newIP
+			v.Set(choice, changedValue)
 		}
 	}
-
-	v.Set(choice, changedValue)
 
 	parsed, err := Parse(v)
 	if err != nil {
@@ -115,4 +110,26 @@ func UpdateSettingsPrompt(viperSettings map[string]interface{}) error {
 	parsed.UpdateSettings()
 	color.HiGreen("successfully updated %s to equal %s", choice, changedValue)
 	return nil
+}
+
+func addNewWebShortcut() (string, string) {
+	target := gui.InputPromptWithResponse("what do you want to name the shortcut?", "", false)
+
+	url := gui.InputPromptWithResponse(fmt.Sprintf("what is the shortcut url you want to set for %s?", target), "", false)
+
+	if target == "" || url == "" {
+		gui.ExitWithError("missing required values")
+	}
+
+	return fmt.Sprintf("webshort.%s", target), url
+}
+
+func verify(filepath string) error {
+	preCheck, _ := Parse(viper.GetViper())
+
+	if preCheck.WebShortcuts == nil {
+		viper.Set("webshort", defaultShortcuts)
+	}
+
+	return viper.WriteConfigAs(filepath)
 }

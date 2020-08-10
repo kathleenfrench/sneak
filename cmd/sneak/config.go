@@ -5,7 +5,6 @@ import (
 
 	"github.com/fatih/color"
 	"github.com/kathleenfrench/common/exec"
-	"github.com/kathleenfrench/common/finder"
 	"github.com/kathleenfrench/common/gui"
 	"github.com/kathleenfrench/sneak/internal/config"
 	"github.com/spf13/cobra"
@@ -50,38 +49,31 @@ var configUpdateCmd = &cobra.Command{
 }
 
 var configSetCmd = &cobra.Command{
-	Use:   "set",
-	Args:  cobra.ExactArgs(2),
-	Short: "skip the update GUI and either change a specific config value by config key or add a custom config",
+	Use:    "set",
+	Args:   cobra.ExactArgs(2),
+	Short:  "skip the update GUI and either change a specific config value by config key or add a custom config",
+	Hidden: true,
 	Run: func(cmd *cobra.Command, args []string) {
-		key := args[0]
-		val := args[1]
+		// key := args[0]
+		// val := args[1]
 
-		keys := viper.AllKeys()
-		settings := viper.AllSettings()
-
-		var toChange interface{}
-		if finder.FoundStringInSlice(keys, key) {
-			toChange = settings[key]
-		}
-
-		color.HiBlue("will be changing %v to %s", toChange, val)
-
-		// switch len(args) {
-		// case 1:
-		// 	// just receive the key, verify that they key exists and prompt for what value to change
-		// 	key := args[0]
-		// 	keys := v.AllKeys()
-		// 	if finder.FoundStringInSlice(keys, key) {
-		// 		gui.Info("eyes", fmt.Sprintf("%s is an existing key...", key), v.Get(key))
-		// 		// use the currently set value as the default
-		// 	} else {
-
-		// 	}
-		// case 2:
-		// 	// receive the key and the value, set the key and value
+		// switch viper.IsSet(key) {
+		// case true:
+		// 	// prompt use what they want to change it to
+		// 	gui.Info("light_bulb", fmt.Sprintf("%s has a current value of %v - changing it to %s", key, viper.Get(key), val), nil)
+		// 	viper.Set(key, val)
+		// 	sneakCfg.UpdateSettings()
 		// default:
-		// 	gui.ExitWithError("invalid input")
+		// 	correct := gui.ConfirmPrompt(fmt.Sprintf("%s is not an existing key - are you meaning to add a new one?", key), "", true, true)
+		// 	switch correct {
+		// 	case true:
+		// 		viper.Set(key, val)
+		// 		err := sneakCfg.UpdateSettings()
+		// 		if err != nil {
+		// 			gui.ExitWithError(err)
+		// 		}
+		// 	default:
+		// 	}
 		// }
 	},
 }
@@ -90,6 +82,7 @@ var configDelCmd = &cobra.Command{
 	Use:     "delete",
 	Aliases: []string{"del", "rm"},
 	Short:   "delete non-required config keys and values",
+	Hidden:  true,
 	Run: func(cmd *cobra.Command, args []string) {
 
 	},

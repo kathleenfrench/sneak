@@ -13,6 +13,7 @@ type Settings struct {
 	DefaultEditor   string `yaml:"default_editor"`
 	DBPath          string `yaml:"data"`
 	Home            string
+	WebShortcuts    map[string]string `yaml:"webshort"`
 }
 
 // Parse unmarshals the viper configs into the sneak settings struct

@@ -77,6 +77,22 @@ dbweb: ## view database info on localhost:8080
 	@go get -u github.com/evnix/boltdbweb
 	@boltdbweb -d $(HOME)/.sneak/sneak.db
 
+
+.PHONY: docker
+docker: ## build docker runner image
+	@DOCKER_BUILDKIT=1 docker build -f Dockerfile.run --ssh default -t sneaker .
+
+local_network := $(shell ifconfig | grep "inet " | grep -Fv 127.0.0.1 | awk '{print $$2}')
+
+.PHONY: run
+run: docker ## run sneak in a containerized environment
+	@docker run \
+		--privileged \
+		--sysctl net.ipv6.conf.all.disable_ipv6=0 \
+		--env LOCAL_NETWORK=$(local_network) \
+		-it sneaker \
+		 /bin/sh
+
 .PHONY: help
 help: ## lists some available makefile commands
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
