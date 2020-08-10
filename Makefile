@@ -15,6 +15,10 @@ CMD_MODULE := $(MODULE)/cmd/$(BIN_NAME)
 ${BUILD_OUTPUT_DIR}:
 	@mkdir -p $(BUILD_OUTPUT_DIR)
 
+ifneq ($(MAKECMDGOALS),dev,run)
+-include env.mk
+endif
+
 UNAME_S := $(shell uname -s)
 ifeq ($(PLATFORM),)
 ifeq ($(UNAME_S),Darwin)
@@ -106,9 +110,12 @@ push: docker ## push the docker sneaker image
 	@docker push docker.io/kfrench/sneaker:$(VERSION)
 	@docker push docker.io/kfrench/sneaker:latest
 
+# htb_username := nightwd60
+
 .PHONY: dev
 dev: dev-build ## build a docker image for local development of sneak binary and sneaker env
-	@DOCKER_BUILDKIT=1 docker build -f Dockerfile.dev -t sneaker .
+	@echo "HACK THE BOC USERNAMEIMPORT $(HTB_USERNAME)"
+	@DOCKER_BUILDKIT=1 docker build --build-arg USER=$(HTB_USERNAME) -f Dockerfile.dev -t sneaker .
 
 local_network := $(shell ifconfig | grep "inet " | grep -Fv 127.0.0.1 | awk '{print $$2}')
 
@@ -119,6 +126,7 @@ run: dev ## run sneak in a containerized environment
 		--sysctl net.ipv6.conf.all.disable_ipv6=0 \
 		--env LOCAL_NETWORK=$(local_network) \
 		--cap-add=NET_ADMIN \
+		-v $(HOME)/.sneak/:/home/$(HTB_USERNAME)/.sneak \
 		-v $(CWD)/build/sneak:/go/bin/sneak \
 		-p 8118:8118 \
 		-it sneaker \

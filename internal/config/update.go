@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/fatih/color"
+	"github.com/kathleenfrench/common/exec"
 	"github.com/kathleenfrench/common/gui"
 	"github.com/kathleenfrench/sneak/internal/helpers"
 	"github.com/spf13/viper"
@@ -132,7 +133,7 @@ func addNewWebShortcut() (string, string) {
 	return fmt.Sprintf("webshort.%s", target), url
 }
 
-func verify(filepath string) error {
+func verify(filepath string, mountedData bool) error {
 	preCheck, _ := Parse(viper.GetViper())
 
 	if preCheck.WebShortcuts == nil {
@@ -143,6 +144,15 @@ func verify(filepath string) error {
 		fmt.Println(htbNetworkIPHelpText)
 		htbIP := gui.InputPromptWithResponse("what is your HTB Lab Network IPv4?", "", true)
 		viper.Set("htb_network_ip", htbIP)
+	}
+
+	if mountedData {
+		if whoami, err := exec.BashExec("whoami"); err != nil {
+			gui.Warn("sneak had an issue updating your ovpn_filepath config from what's coming from your mounted data - make sure to run `sneak config update` and change it so you can connect to the vpn", err)
+		} else {
+			newOvpnPath := fmt.Sprintf("/home/%s/.sneak/%s.ovpn", whoami, whoami)
+			viper.Set("openvpn_filepath", newOvpnPath)
+		}
 	}
 
 	return viper.WriteConfigAs(filepath)

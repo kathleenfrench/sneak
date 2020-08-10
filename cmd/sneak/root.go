@@ -17,7 +17,8 @@ import (
 // Version is a value injected at compile time for the current version of sneak
 var Version = "master"
 
-var testing string
+// mountedData is a bool flag used when running sneaker with mounted local .sneak configs
+var mountedData bool
 
 // local
 var (
@@ -39,7 +40,7 @@ var rootCmd = &cobra.Command{
 		cmd.Usage()
 	},
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		err := config.SafeWriteConfig()
+		err := config.SafeWriteConfig(mountedData)
 		if err != nil {
 			gui.ExitWithError(err)
 		}
@@ -86,6 +87,8 @@ func initGlobalFlags() {
 	viper.BindPFlag("useViper", rootCmd.PersistentFlags().Lookup("viper"))
 	rootCmd.PersistentFlags().StringVar(&dataDir, "data", "", "database dir default is $HOME/.sneak")
 	viper.BindPFlag("data", rootCmd.PersistentFlags().Lookup("data"))
+	rootCmd.PersistentFlags().BoolVarP(&mountedData, "mount", "m", false, "used when running the full sneaker containerized environment and mounting local .sneak config files - only needs to be run once")
+	viper.BindPFlag("mounted_data", rootCmd.PersistentFlags().Lookup("mount"))
 }
 
 func init() {
