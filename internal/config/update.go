@@ -152,6 +152,8 @@ func verify(filepath string, mountedData bool) error {
 		} else {
 			newOvpnPath := fmt.Sprintf("/home/%s/.sneak/%s.ovpn", whoami, whoami)
 			viper.Set("openvpn_filepath", newOvpnPath)
+			newDataDir := fmt.Sprintf("/home/%s/.sneak", whoami)
+			viper.Set("data", newDataDir)
 		}
 	}
 
