@@ -93,7 +93,7 @@ docker: ## build docker sneaker image
 	@docker tag docker.io/kfrench/sneaker:$(VERSION) docker.io/kfrench/sneaker:latest
 
 .PHONY: push
-push: ## push the docker sneaker image
+push: docker ## push the docker sneaker image
 	@docker push docker.io/kfrench/sneaker:$(VERSION)
 	@docker push docker.io/kfrench/sneaker:latest
 
@@ -104,7 +104,7 @@ dev: ## build a docker image for local development of sneak binary and sneaker e
 local_network := $(shell ifconfig | grep "inet " | grep -Fv 127.0.0.1 | awk '{print $$2}')
 
 .PHONY: run
-run: docker ## run sneak in a containerized environment
+run: dev ## run sneak in a containerized environment
 	@docker run \
 		--privileged \
 		--sysctl net.ipv6.conf.all.disable_ipv6=0 \

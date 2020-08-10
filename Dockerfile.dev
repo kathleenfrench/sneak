@@ -1,5 +1,3 @@
-# syntax=docker/dockerfile:experimental
-
 ARG SNEAK_VERSION
 ARG LOCAL_NETWORK=172.16.0.0/12
 ARG USER=sneak
