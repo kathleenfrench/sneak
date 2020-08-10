@@ -7,6 +7,7 @@ import (
 	"github.com/kathleenfrench/common/gui"
 	"github.com/kathleenfrench/sneak/internal/config"
 	"github.com/kathleenfrench/sneak/internal/store"
+	"github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/timshannon/bolthold"
@@ -88,15 +89,9 @@ func initGlobalFlags() {
 }
 
 func init() {
+	home, _ = homedir.Dir()
 	cobra.OnInitialize(config.InitConfig)
-
 	initGlobalFlags()
-
-	configCmd.AddCommand(configListCmd)
-	configCmd.AddCommand(configSetCmd)
-	configCmd.AddCommand(configUpdateCmd)
-	configCmd.AddCommand(configDelCmd)
-
 	rootCmd.AddCommand(configCmd)
 	rootCmd.AddCommand(dbCmd)
 	rootCmd.AddCommand(boxSubCmd)

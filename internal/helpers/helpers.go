@@ -1,24 +1,15 @@
 package helpers
 
-import "fmt"
+import (
+	"fmt"
+	"os"
+	"os/exec"
+)
 
 // Spacer is a simple util for adding space between terminal messages
 func Spacer() {
 	fmt.Println("")
 }
-
-// func Sudo(cmd string) (string, error) {
-// 			// sudo check
-// 			a := exec.Command("sudo", "ls")
-// 			a.Stderr = os.Stderr
-// 			a.Stdin = os.Stdin
-// 			out, err := a.Output()
-// 			if err != nil {
-// 				gui.ExitWithError(err)
-// 			}
-
-// 			fmt.Println(string(out))
-// }
 
 // GetKeysFromMap is a helper for fetching a slice of strings from a mpa
 func GetKeysFromMap(m map[string]string) (keys []string) {
@@ -27,4 +18,19 @@ func GetKeysFromMap(m map[string]string) (keys []string) {
 	}
 
 	return keys
+}
+
+// SudoPing becasuse the alpine linux docker imnage does not play nice with normal ping
+func SudoPing(ip string) error {
+	cmd := exec.Command("sudo", "ping", "-c", fmt.Sprintf("%d", 1), ip)
+	cmd.Stderr = os.Stderr
+	cmd.Stdin = os.Stdin
+
+	out, err := cmd.Output()
+	if err != nil {
+		return err
+	}
+
+	fmt.Println(string(out))
+	return nil
 }

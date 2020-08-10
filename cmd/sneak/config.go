@@ -24,7 +24,7 @@ var configListCmd = &cobra.Command{
 	Use:     "list",
 	Aliases: []string{"ls", "show", "view"},
 	Short:   "view your current sneak configs",
-	Args:    cobra.MaximumNArgs(0),
+	Args:    cobra.ExactArgs(0),
 	Run: func(cmd *cobra.Command, args []string) {
 		out, err := exec.BashExec(fmt.Sprintf("cat %s", viper.ConfigFileUsed()))
 		if err != nil {
@@ -32,6 +32,21 @@ var configListCmd = &cobra.Command{
 		}
 
 		color.HiBlue(out)
+	},
+}
+
+var configGetCmd = &cobra.Command{
+	Use:     "get",
+	Aliases: []string{"g"},
+	Short:   "get a specific config value",
+	Args:    cobra.ExactArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		v := viper.GetViper()
+		if v.IsSet(args[0]) {
+			color.Green("%v", v.Get(args[0]))
+		} else {
+			color.Red("no value set for key %s!", args[0])
+		}
 	},
 }
 
@@ -48,36 +63,6 @@ var configUpdateCmd = &cobra.Command{
 	},
 }
 
-var configSetCmd = &cobra.Command{
-	Use:    "set",
-	Args:   cobra.ExactArgs(2),
-	Short:  "skip the update GUI and either change a specific config value by config key or add a custom config",
-	Hidden: true,
-	Run: func(cmd *cobra.Command, args []string) {
-		// key := args[0]
-		// val := args[1]
-
-		// switch viper.IsSet(key) {
-		// case true:
-		// 	// prompt use what they want to change it to
-		// 	gui.Info("light_bulb", fmt.Sprintf("%s has a current value of %v - changing it to %s", key, viper.Get(key), val), nil)
-		// 	viper.Set(key, val)
-		// 	sneakCfg.UpdateSettings()
-		// default:
-		// 	correct := gui.ConfirmPrompt(fmt.Sprintf("%s is not an existing key - are you meaning to add a new one?", key), "", true, true)
-		// 	switch correct {
-		// 	case true:
-		// 		viper.Set(key, val)
-		// 		err := sneakCfg.UpdateSettings()
-		// 		if err != nil {
-		// 			gui.ExitWithError(err)
-		// 		}
-		// 	default:
-		// 	}
-		// }
-	},
-}
-
 var configDelCmd = &cobra.Command{
 	Use:     "delete",
 	Aliases: []string{"del", "rm"},
@@ -86,4 +71,11 @@ var configDelCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 
 	},
+}
+
+func init() {
+	configCmd.AddCommand(configListCmd)
+	configCmd.AddCommand(configUpdateCmd)
+	configCmd.AddCommand(configDelCmd)
+	configCmd.AddCommand(configGetCmd)
 }

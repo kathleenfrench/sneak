@@ -44,6 +44,15 @@ build: vendor ${BUILD_OUTPUT_DIR} ## build the sneak binary
 		$(GO) build $(GO_BUILD_FLAGS)
 	@echo "${NAME} bin compiled!"
 
+.PHONY: dev-build
+dev-build: vendor ${BUILD_OUTPUT_DIR} ## build the sneak binary for linux for easier dev on running sneaker container locally
+	@echo "compiling ${NAME} as linux distro for mounting the bin in local-dev..."
+	@export GOOS=linux GOARCH=$(GOARCH) && \
+		export GO111MODULE=on && \
+		export CGO_ENABLED=0 && \
+		$(GO) build $(GO_BUILD_FLAGS)
+	@echo "${NAME} bin compiled!"
+
 .PHONY: install
 install: build ## install the sneak binary to /usr/local/bin
 	@echo "installing sneak to ${INSTALL_LOCATION}"
@@ -77,19 +86,40 @@ dbweb: ## view database info on localhost:8080
 	@go get -u github.com/evnix/boltdbweb
 	@boltdbweb -d $(HOME)/.sneak/sneak.db
 
+.PHONY: image
+image: ## buids a docker image of only the sneak binary
+	@docker build -f dist/sneak/Dockerfile -t docker.io/kfrench/sneak:$(VERSION) .
+	@docker tag kfrench/sneak:$(VERSION) docker.io/kfrench/sneak:latest
+
+.PHONY: pushbin
+pushbin: image ## pushes the sneak image to docker
+	@docker push docker.io/kfrench/sneak:$(VERSION)
+	@docker push docker.io/kfrench/sneak:latest
 
 .PHONY: docker
-docker: ## build docker runner image
-	@DOCKER_BUILDKIT=1 docker build --ssh default -t sneaker .
+docker: ## build docker sneaker image
+	@DOCKER_BUILDKIT=1 docker build -f dist/sneaker/Dockerfile --ssh default -t docker.io/kfrench/sneaker:$(VERSION) .
+	@docker tag docker.io/kfrench/sneaker:$(VERSION) docker.io/kfrench/sneaker:latest
+
+.PHONY: push
+push: docker ## push the docker sneaker image
+	@docker push docker.io/kfrench/sneaker:$(VERSION)
+	@docker push docker.io/kfrench/sneaker:latest
+
+.PHONY: dev
+dev: dev-build ## build a docker image for local development of sneak binary and sneaker env
+	@DOCKER_BUILDKIT=1 docker build -f Dockerfile.dev -t sneaker .
 
 local_network := $(shell ifconfig | grep "inet " | grep -Fv 127.0.0.1 | awk '{print $$2}')
 
 .PHONY: run
-run: docker ## run sneak in a containerized environment
+run: dev ## run sneak in a containerized environment
 	@docker run \
 		--privileged \
 		--sysctl net.ipv6.conf.all.disable_ipv6=0 \
 		--env LOCAL_NETWORK=$(local_network) \
+		--cap-add=NET_ADMIN \
+		-v $(CWD)/build/sneak:/go/bin/sneak \
 		-p 8118:8118 \
 		-it sneaker \
 		 /bin/sh

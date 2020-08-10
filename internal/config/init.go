@@ -33,7 +33,6 @@ func InitConfig() {
 		gui.ExitWithError(err)
 	}
 
-	cfg.Home = home
 	cfgPath := fmt.Sprintf("%s/.sneak", home)
 
 	// check for whether the directory and config file already exist
@@ -104,6 +103,9 @@ func SafeWriteConfig() error {
 	viper.Set("default_editor", preferredEditor)
 	viper.Set("data", dir)
 	viper.Set("webshort", defaultShortcuts)
+	fmt.Println(htbNetworkIPHelpText)
+	labAccessIP := gui.InputPromptWithResponse("what is your HTB Lab Network IPv4?", "10.10.15.71", true)
+	viper.Set("htb_network_ip", labAccessIP)
 
 	// write config file
 	gui.Info("popcorn", "writing sneak defaults...", filepath)

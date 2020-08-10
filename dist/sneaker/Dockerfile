@@ -1,0 +1,51 @@
+# syntax=docker/dockerfile:experimental
+
+ARG LOCAL_NETWORK=172.16.0.0/12
+ARG USER=sneak
+ARG UID=1000
+ARG GID=1000
+
+FROM golang:alpine as base
+ARG USER
+ARG UID
+ARG GID
+
+RUN apk update && apk add --no-cache \
+    openvpn easy-rsa bash netcat-openbsd zip dumb-init \
+    privoxy curl tmux vim sudo \
+    openssh-client git
+
+RUN echo '%wheel ALL=(ALL) ALL' > /etc/sudoers.d/wheel
+
+RUN export uid=${UID} gid=${GID} username=${USER} && \
+    mkdir -p /home/${USER} && \
+    echo "${username}:x:${uid}:${gid}:User,,,:/home/${username}:/bin/bash" >> /etc/passwd && \
+    echo "${username}:x:${uid}:" >> /etc/group && \
+    chown ${uid}:${gid} -R /home/${username}
+
+RUN mkdir -p /dev/net \ 
+    && mknod /dev/net/tun c 10 200
+
+## have to enable sudo for openvpn to work
+RUN echo "$USER ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/$USER \
+    && chmod 0440 /etc/sudoers.d/$USER \
+    && mkdir -p -m 0600 ~/.ssh \
+    && ssh-keyscan github.com >> ~/.ssh/known_hosts
+
+WORKDIR /go/src/github.com/kathleenfrench/sneak
+
+RUN --mount=type=ssh git clone git@github.com:kathleenfrench/sneak.git . \
+    && go install
+
+FROM base as runner
+ARG LOCAL_NETWORK
+ARG USER
+ENV LOCAL_NETWORK ${LOCAL_NETWORK}
+USER ${USER}
+
+WORKDIR /home/${USER}
+COPY files/config.default .
+COPY files/vpn /opt/vpn
+ENV PATH="${PATH}:/opt/vpn"
+
+EXPOSE 8118 4444

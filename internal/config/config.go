@@ -8,12 +8,12 @@ import (
 // Settings represent the sneak configs
 type Settings struct {
 	viper           *viper.Viper
-	OpenVPNFilepath string `yaml:"openvpn_filepath"`
-	HTBUsername     string `yaml:"htb_username"`
-	DefaultEditor   string `yaml:"default_editor"`
-	DBPath          string `yaml:"data"`
-	Home            string
+	OpenVPNFilepath string            `yaml:"openvpn_filepath"`
+	HTBUsername     string            `yaml:"htb_username"`
+	DefaultEditor   string            `yaml:"default_editor"`
+	DBPath          string            `yaml:"data"`
 	WebShortcuts    map[string]string `yaml:"webshort"`
+	HTBNetworkIP    string            `yaml:"htb_network_ip"` // https://www.hackthebox.eu/home/htb/access
 }
 
 // Parse unmarshals the viper configs into the sneak settings struct
