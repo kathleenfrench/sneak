@@ -21,17 +21,17 @@ require (
 	github.com/mitchellh/mapstructure v1.3.3
 	github.com/olekukonko/tablewriter v0.0.4
 	github.com/pelletier/go-toml v1.8.0 // indirect
-	github.com/phayes/permbits v0.0.0-20190612203442-39d7c581d2ee
 	github.com/spf13/afero v1.3.4 // indirect
 	github.com/spf13/cast v1.3.1 // indirect
 	github.com/spf13/cobra v1.0.0
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/spf13/viper v1.7.1
+	github.com/tatsushid/go-fastping v0.0.0-20160109021039-d7bb493dee3e
 	github.com/timshannon/bolthold v0.0.0-20200721214230-3be86da07fdb
 	go.etcd.io/bbolt v1.3.5
 	go.mongodb.org/mongo-driver v1.4.0 // indirect
 	golang.org/x/crypto v0.0.0-20200728195943-123391ffb6de // indirect
-	golang.org/x/sys v0.0.0-20200808120158-1030fc2bf1d9 // indirect
+	golang.org/x/sys v0.0.0-20200810151505-1b9f1253b3ed // indirect
 	gopkg.in/ini.v1 v1.57.0 // indirect
 )

@@ -8,6 +8,7 @@ import (
 
 	"github.com/fatih/color"
 	"github.com/kathleenfrench/common/gui"
+	"github.com/kathleenfrench/sneak/internal/helpers"
 	"github.com/kathleenfrench/sneak/internal/vpn"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -55,32 +56,12 @@ var vpnConnectCmd = &cobra.Command{
 			gui.ExitWithError("you have not setup openvpn yet with sneak - run 'sneak vpn setup'")
 		}
 
-		// ctx := context.Background()
-		// runner := shell.NewRunner()
 		err := openVPN.Connect()
 		if err != nil {
 			gui.ExitWithError(err)
 		}
 
-		// vpnPath := fmt.Sprintf("%s/vpn", home)
-		// gui.Info("popcorn", "trying to connect...", vpnPath)
-		// v := viper.GetViper()
-		// color.Green("open vpn config filepath at %s", v.GetString("openvpn_filepath"))
-
-		// gui.Spin.Start()
-		// // vpnscript := fmt.Sprintf("sudo %s %s", vpnPath, v.GetString("openvpn_filepath"))
-		// // logs := execute(exec.Command("/bin/bash", "-c", "sudo", vpnPath, v.GetString("openvpn_filepath")))
-		// logs, err := exec.Command("/bin/bash", "-c", vpnPath, v.GetString("openvpn_filepath")).CombinedOutput()
-		// gui.Spin.Stop()
-		// if err != nil {
-		// 	gui.ExitWithError(string(logs))
-		// }
-
-		// color.Green(string(logs))
-		// logs, err := runner.BashExec(vpnscript)
-		// if err != nil {
-		// 	gui.ExitWithError(err)
-		// }
+		color.Green("success! you can always run `sneak vpn test` to verify your connection to the HTB lab IP set in your configs")
 	},
 }
 
@@ -153,6 +134,21 @@ var vpnTestCmd = &cobra.Command{
 		if !openVPN.AlreadySetup() {
 			gui.ExitWithError("you have not setup openvpn yet with sneak - run 'sneak vpn setup'")
 		}
+
+		if !viper.IsSet("htb_network_ip") {
+			gui.ExitWithError("your HTB network IP has not been set in your configs - please run `sneak config update`, select it from the dropdown, and follow the onscreen prompts")
+		}
+
+		gui.Info("popcorn", fmt.Sprintf("\033[H\033[2J\nchecking..."), viper.GetString("htb_network_ip"))
+		gui.Spin.Start()
+		err := helpers.SudoPing(viper.GetString("htb_network_ip"))
+		gui.Spin.Stop()
+		if err != nil {
+			gui.Warn("your connection could not be established", viper.Get("htb_network_ip"))
+			gui.ExitWithError(err)
+		}
+
+		color.Green("you're connected!")
 	},
 }
 

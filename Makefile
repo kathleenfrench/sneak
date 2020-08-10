@@ -118,6 +118,7 @@ run: dev ## run sneak in a containerized environment
 		--privileged \
 		--sysctl net.ipv6.conf.all.disable_ipv6=0 \
 		--env LOCAL_NETWORK=$(local_network) \
+		--cap-add=NET_ADMIN \
 		-v $(CWD)/build/sneak:/go/bin/sneak \
 		-p 8118:8118 \
 		-it sneaker \
