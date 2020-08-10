@@ -143,7 +143,7 @@ func PrintBoxDataTable(box Box) {
 		{"IP", box.IP},
 		{"description", box.Description},
 		{"hostname", box.Hostname},
-		{"os", box.Hostname},
+		{"os", box.OS},
 		{"difficulty", box.Difficulty},
 		{"active", box.Active},
 		{"completed", box.Completed},
@@ -242,7 +242,14 @@ func SelectBoxActionsDropdown(db *bolthold.Store, box Box, boxes []Box) error {
 
 		return SelectBoxActionsDropdown(db, box, boxes)
 	case checkConnection:
-		color.Red("TODO")
+		err := helpers.SudoPing(box.IP)
+		if err != nil {
+			gui.Warn("uh oh, that box couldn't be reached! verify that the machine is active and your VPN connection is still intact", box.IP)
+		} else {
+			gui.Info("+1", "reachable!", box.IP)
+		}
+
+		return SelectBoxActionsDropdown(db, box, boxes)
 	case openNotes:
 		note, err := checkForNoteFile(box.Name)
 		if err != nil {

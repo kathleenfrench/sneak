@@ -44,6 +44,11 @@ var listBoxesCmd = &cobra.Command{
 			gui.ExitWithError(err)
 		}
 
+		if len(boxes) == 0 {
+			gui.Warn("you don't have any boxes yet! run `sneak box add` to get started", nil)
+			return
+		}
+
 		selection := htb.SelectBoxFromDropdown(boxes)
 
 		if err = htb.SelectBoxActionsDropdown(db, selection, boxes); err != nil {
