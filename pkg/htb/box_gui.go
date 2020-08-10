@@ -201,7 +201,8 @@ func printFlagTable(flags Flags) {
 const (
 	toggleActiveStatus = "toggle active status"
 	checkConnection    = "check connection"
-	openNotes          = "open notes"
+	openNotes          = "open notes editor"
+	quickViewNotes     = "quickview notes"
 	editDescription    = "edit description"
 	flags              = "flags"
 	returnToBoxes      = "return to other boxes"
@@ -213,6 +214,7 @@ var boxActions = []string{
 	toggleActiveStatus,
 	checkConnection,
 	openNotes,
+	quickViewNotes,
 	editDescription,
 	flags,
 	returnToBoxes,
@@ -273,6 +275,19 @@ func (bg *boxGUI) SelectBoxActionsDropdown(db *bolthold.Store, box Box, boxes []
 		boxes, err = GetAllBoxes(db)
 		if err != nil {
 			return err
+		}
+
+		return bg.SelectBoxActionsDropdown(db, box, boxes)
+	case quickViewNotes:
+		note, err := checkForNoteFile(box.Name)
+		if err != nil {
+			return err
+		}
+
+		if len(note) == 0 {
+			color.Yellow("you have not started a note for %s yet!", box.Name)
+		} else {
+			fmt.Println(helpers.RenderMarkdown(note))
 		}
 
 		return bg.SelectBoxActionsDropdown(db, box, boxes)
