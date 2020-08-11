@@ -5,6 +5,7 @@ type Workflow struct {
 	Version   int                 `yaml:"version"`
 	Pipelines map[string]Pipeline `yaml:"pipelines,omitempty"`
 	WordLists []string            `yaml:"wordlist_paths,omitempty"`
+	Actions   map[string]Action   `yaml:"actions,omitempty"`
 }
 
 // Pipeline represents a collection of tasks to run
@@ -39,10 +40,11 @@ type Runner struct {
 
 // Tool represents information about an external tool to use/download
 type Tool struct {
-	Name        string `yaml:"name"`
-	Description string `yaml:"description"`
-	DownloadURL string `yaml:"download_url,omitempty"`
-	ScriptPath  string `yaml:"script_path,omitempty"`
+	Name                 string `yaml:"name"`
+	Description          string `yaml:"description"`
+	DownloadURL          string `yaml:"download_url,omitempty"`
+	ScriptPath           string `yaml:"script_path,omitempty"`
+	DownloadIfNotPresent bool   `yaml:"download_if_not_present,omitempty"`
 }
 
 // Action represents an independent action that can be taken - useful for common operations like reverse shells, spinning up simple http servers, reverse shells, etc.
