@@ -1,6 +1,6 @@
 package pipeline
 
-// Workflow represents the document saving a user's preset and custom pipelines
+// Workflow represents the document saving a user's workflow pipelines when investigating a target
 type Workflow struct {
 	Version   int                 `yaml:"version"`
 	Pipelines map[string]Pipeline `yaml:"pipelines,omitempty"`
@@ -16,28 +16,38 @@ type Pipeline struct {
 
 // Task represents an individual check
 type Task struct {
-	Name       string `yaml:"name"`
-	Runner     Runner `yaml:"command,omitempty"`
-	ScriptPath string `yaml:"script_path,omitempty"`
-	Output     string `yaml:"output,omitempty"`
-	OutputPath string `yaml:"output_path,omitempty"`
-	Complete   bool   `yaml:"complete,omitempty"`
-	InProgress bool   `yaml:"in_progress,omitempty"`
-	Skip       bool   `yaml:"skip,omitempty"`
+	Name        string `yaml:"name"`
+	Description string `yaml:"description,omitempty"`
+	Runner      Runner `yaml:"run,omitempty"`
+	ScriptPath  string `yaml:"script_path,omitempty"`
+	OutputPath  string `yaml:"output_path,omitempty"`
+	Skip        bool   `yaml:"skip,omitempty"`
+	output      string
+	complete    bool
+	active      bool
 }
 
 // Runner represents the actual scripting/tools to use when running the task
 type Runner struct {
 	Command    string `yaml:"command,omitempty"`
 	ScriptPath string `yaml:"script_path,omitempty"`
-	Active     bool   `yaml:"active,omitempty"`
-	Complete   bool   `yaml:"complete,omitempty"`
-	Output     string `yaml:"output,omitempty"`
 	OutputPath string `yaml:"output_path,omitempty"`
+	output     string
+	active     bool
+	completed  bool
 }
 
 // Tool represents information about an external tool to use/download
 type Tool struct {
+	Name        string `yaml:"name"`
+	Description string `yaml:"description"`
 	DownloadURL string `yaml:"download_url,omitempty"`
 	ScriptPath  string `yaml:"script_path,omitempty"`
+}
+
+// Action represents an independent action that can be taken - useful for common operations like reverse shells, spinning up simple http servers, reverse shells, etc.
+type Action struct {
+	Name        string `yaml:"name"`
+	Description string `yaml:"description"`
+	Runner      Runner `yaml:"run"`
 }
