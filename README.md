@@ -38,7 +38,7 @@ to actually connect, run:
 sneak vpn connect
 ```
 
-this will start the `openvpn` client. you can always verify your connection with:
+this will start the `openvpn` client and [`privoxy`](https://www.privoxy.org/). you can always verify your connection with:
 
 ```
 sneak vpn test
