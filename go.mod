@@ -3,6 +3,9 @@ module github.com/kathleenfrench/sneak
 go 1.14
 
 require (
+	github.com/MichaelMure/go-term-markdown v0.1.3
+	github.com/MichaelMure/go-term-text v0.2.9 // indirect
+	github.com/alecthomas/chroma v0.8.0 // indirect
 	github.com/asaskevich/govalidator v0.0.0-20200428143746-21a406dcc535
 	github.com/boltdb/bolt v1.3.1 // indirect
 	github.com/davecgh/go-spew v1.1.1
@@ -10,6 +13,7 @@ require (
 	github.com/fatih/color v1.9.0
 	github.com/fsnotify/fsnotify v1.4.9 // indirect
 	github.com/go-openapi/errors v0.19.6 // indirect
+	github.com/gomarkdown/markdown v0.0.0-20200609195525-3f9352745725 // indirect
 	github.com/jedib0t/go-pretty v4.3.0+incompatible
 	github.com/kathleenfrench/common v0.0.0-20200810070208-93674e6dfbdf
 	github.com/kval-access-language/kval-boltdb v0.0.0-20170330045345-f3797777c95e
@@ -32,6 +36,8 @@ require (
 	go.etcd.io/bbolt v1.3.5
 	go.mongodb.org/mongo-driver v1.4.0 // indirect
 	golang.org/x/crypto v0.0.0-20200728195943-123391ffb6de // indirect
+	golang.org/x/image v0.0.0-20200801110659-972c09e46d76 // indirect
+	golang.org/x/net v0.0.0-20200707034311-ab3426394381 // indirect
 	golang.org/x/sys v0.0.0-20200810151505-1b9f1253b3ed // indirect
 	gopkg.in/ini.v1 v1.57.0 // indirect
 )
