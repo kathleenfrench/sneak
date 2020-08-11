@@ -56,3 +56,25 @@ if you want to switch back to running `sneak` outside of docker with the same pe
 ```
 sneak --unmount (-u)
 ```
+
+### connecting to the VPN
+
+after your configs have been set, run:
+
+```
+sneak vpn setup
+```
+
+this will prompt you for your generated `.ovpn` file from `hack the box' and create your `privoxy` config file so you can connect to the container locally via reverse proxy.
+
+to actually connect, run:
+
+```
+sneak vpn connect
+```
+
+this will start the `openvpn` client. you can always verify your connection with:
+
+```
+sneak vpn test
+```
