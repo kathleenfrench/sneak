@@ -39,6 +39,11 @@ var rootCmd = &cobra.Command{
 	Use:   "sneak",
 	Short: "a tool for common actions when pentesting/playing CTFs",
 	Run: func(cmd *cobra.Command, args []string) {
+		if mountData || unMountData {
+			gui.Info("+1", "your configs have been updated!", nil)
+			return
+		}
+
 		fmt.Println(config.Banner)
 		cmd.Usage()
 	},
