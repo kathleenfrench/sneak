@@ -17,8 +17,11 @@ import (
 // Version is a value injected at compile time for the current version of sneak
 var Version = "master"
 
-// mountedData is a bool flag used when running sneaker with mounted local .sneak configs
-var mountedData bool
+// mountData is a bool flag used when running sneaker with mounted local .sneak configs
+var mountData bool
+
+// unMountData is a bool flag used when converting containerized configs back into compatibility with your local fs
+var unMountData bool
 
 // local
 var (
@@ -36,11 +39,16 @@ var rootCmd = &cobra.Command{
 	Use:   "sneak",
 	Short: "a tool for common actions when pentesting/playing CTFs",
 	Run: func(cmd *cobra.Command, args []string) {
+		if mountData || unMountData {
+			gui.Info("+1", "your configs have been updated!", nil)
+			return
+		}
+
 		fmt.Println(config.Banner)
 		cmd.Usage()
 	},
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		err := config.SafeWriteConfig(mountedData)
+		err := config.SafeWriteConfig(mountData, unMountData)
 		if err != nil {
 			gui.ExitWithError(err)
 		}
@@ -87,8 +95,9 @@ func initGlobalFlags() {
 	viper.BindPFlag("useViper", rootCmd.PersistentFlags().Lookup("viper"))
 	rootCmd.PersistentFlags().StringVar(&dataDir, "data", "", "database dir default is $HOME/.sneak")
 	viper.BindPFlag("data", rootCmd.PersistentFlags().Lookup("data"))
-	rootCmd.PersistentFlags().BoolVarP(&mountedData, "mount", "m", false, "used when running the full sneaker containerized environment and mounting local .sneak config files - only needs to be run once")
-	viper.BindPFlag("mounted_data", rootCmd.PersistentFlags().Lookup("mount"))
+	rootCmd.PersistentFlags().BoolVarP(&mountData, "mount", "m", false, "used when running the full sneaker containerized environment and mounting local .sneak config files - only needs to be run once")
+	// viper.BindPFlag("mounted_data", rootCmd.PersistentFlags().Lookup("mount"))
+	rootCmd.PersistentFlags().BoolVarP(&unMountData, "unmount", "u", false, "used when running sneak locally after having mounted persistent data into a containerized environment to refresh config path values - only needs to be run once")
 }
 
 func init() {

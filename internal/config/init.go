@@ -70,7 +70,7 @@ func GetNotesDirectory() string {
 }
 
 // SafeWriteConfig creates the config file if it doesn't exist yet
-func SafeWriteConfig(mountedData bool) error {
+func SafeWriteConfig(mountData bool, unmountData bool) error {
 	// configFilePath := path.Join(viper.GetString())
 	dir := viper.GetString("cfg_dir")
 	filepath := path.Join(dir, configName+"."+configType)
@@ -85,7 +85,7 @@ func SafeWriteConfig(mountedData bool) error {
 
 	exists := fs.FileExists(filepath)
 	if exists {
-		return verify(filepath, mountedData)
+		return verify(filepath, mountData, unmountData)
 	}
 
 	gui.Info("popcorn", "creating your config file...", filepath)

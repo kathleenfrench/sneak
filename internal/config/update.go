@@ -133,7 +133,7 @@ func addNewWebShortcut() (string, string) {
 	return fmt.Sprintf("webshort.%s", target), url
 }
 
-func verify(filepath string, mountedData bool) error {
+func verify(filepath string, mountData bool, unmountData bool) error {
 	preCheck, _ := Parse(viper.GetViper())
 
 	if preCheck.WebShortcuts == nil {
@@ -146,7 +146,7 @@ func verify(filepath string, mountedData bool) error {
 		viper.Set("htb_network_ip", htbIP)
 	}
 
-	if mountedData {
+	if mountData || unmountData {
 		if whoami, err := exec.BashExec("whoami"); err != nil {
 			gui.Warn("sneak had an issue updating your ovpn_filepath config from what's coming from your mounted data - make sure to run `sneak config update` and change it so you can connect to the vpn", err)
 		} else {
