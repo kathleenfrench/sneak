@@ -1,6 +1,6 @@
 ## sneak
 
-`sneak` is a tool written for playing `hack the box`, though it's certainly adaptable to other platforms as well. 
+`sneak` is a command line tool written for playing `hack the box`, but the repository also includes an image for running sneak in a pre-baked containerized environment for `sneak` that enables the user to connect to the `htb` VPN and run a reverse proxy (via `privoxy`) in their `sneaker` container to access `htb` sites in their local browser without needing to run a full virtual machine.
 
 ### local db
 
