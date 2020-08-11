@@ -8,14 +8,7 @@
 
 #### running sneak in docker
 
-create an `env.mk` file with your `hack the box` username:
-
-```
-## env.mk
-HTB_USERNAME := yourusername
-```
-
-this value will be imported when you run `sneaker`. running `sneak`'s containerized environment, `sneaker`, is very simple:
+running `sneak`'s containerized environment, `sneaker`, is very simple:
 
 ```
 	@docker run \
@@ -27,6 +20,24 @@ this value will be imported when you run `sneaker`. running `sneak`'s containeri
 		-it sneaker \
 		 /bin/sh
 ```
+
+##### running the container as a custom user
+
+if you want to set your `hack the box` username as the container user, create an `env.mk` file with the following:
+
+```
+## env.mk
+HTB_USERNAME := yourusername
+```
+
+this value will be imported when you run build and run the `sneaker` image, which is simplest to do via the `Makefile`'s `up` command:
+
+```
+make up
+```
+
+which will handle building the image with your custom user info and starting the container
+
 
 ##### mounting your local data
 
@@ -38,11 +49,23 @@ if you want to persist/mount data from your local installation of `sneak`, add v
 		--sysctl net.ipv6.conf.all.disable_ipv6=0 \
 		--env LOCAL_NETWORK=$(local_network) \
 		--cap-add=NET_ADMIN \
-		-v $(HOME)/.sneak/:/home/$(HTB_USERNAME)/.sneak \
+		-v (SEE BELOW)
 		-v $(CWD)/build/sneak:/go/bin/sneak \
 		-p 8118:8118 \
 		-it sneaker \
 		 /bin/sh
+```
+
+if you are using the **default** `sneaker` image (which is the `sneak` user), use the following `--volume` flag:
+
+```
+-v $(HOME)/.sneak/:/home/sneak/.sneak
+```
+
+if you are running the `sneaker` image as a **custom user** (with your `hack the box` username), use the following `--volume` flag:
+
+```
+-v $(HOME)/.sneak/:/home/$(HTB_USERNAME)/.sneak
 ```
 
 once you're in the container and want to run `sneak` just append the `--mount` (`-m`) flag a single time to update your config files to the correct path.
