@@ -1,10 +1,87 @@
-## sneak
+# sneak
 
-`sneak` is a command line tool written for playing `hack the box`, but the repository also includes an image for running sneak in a pre-baked containerized environment for `sneak` that enables the user to connect to the `htb` VPN and run a reverse proxy (via `privoxy`) in their `sneaker` container to access `htb` sites in their local browser without needing to run a full virtual machine.
+`sneak` is a command line tool written for doing `hack the box` CTF challenges. the repository also includes an image for running sneak in a pre-baked containerized environment adapted for `sneak` that enables the user to connect to the `htb` VPN and run a reverse proxy (via `privoxy`) in their `sneaker` container. this permits end users to access `htb` sites from their native browser without needing to run a full virtual machine.
 
-### local db
+the purpose of `sneak` is to make managing data about these box challenges easier and more organized, while providing straightforward means to streamline and document one's findings. 
 
-`sneak` uses `bolthold` (which wraps `boltdb`) to manage data locally beyond the user's custom configurations at the application level. if you want to interact with the database, there's a hidden command (`sneak db`) that will enable you to view the bucket(s), reset the database, as well as back it up
+`sneak` also aggregates common operations into simple pipelines that perform standard, initial vulernability checks against targets. these pipelines are not static, though, as `sneak` gives users the ability to define their own custom security pipelines for tools and scripting.
+
+![](dist/assets/sneak.png)
+
+### quickstart
+
+```
+git clone git@github.com:kathleenfrench/sneak.git
+cd sneak
+make up
+```
+
+----
+
+## use
+
+after installing `sneak`, you will be prompted on the initial run for a few config values it needs to run, like your `hack the box` username. these configs only need to be set once, but can be updated at any time via `sneak config update`. 
+
+### connecting to the hack the box VPN
+
+after your configs have been set, run:
+
+```
+sneak vpn setup
+```
+
+this will prompt you for your generated `.ovpn` file from `hack the box' and create your `privoxy` config file so you can connect to the container locally via reverse proxy.
+
+to actually connect, run:
+
+```
+sneak vpn connect
+```
+
+this will start the `openvpn` client. you can always verify your connection with:
+
+```
+sneak vpn test
+```
+
+### boxes
+
+the purpose of `sneak` is making it easier to manage environments and data between 'boxes', and streamlining that workflow. to that end, you can add and modify boxes in `sneak` at any time. (read [sneak db](#the-sneak-db) for more on the `sneak` database). 
+
+#### add a new box
+
+```
+sneak box new
+```
+
+then follow the onscreen prompts!
+
+#### view all of your boxes
+
+```
+sneak box list
+```
+
+this will launch a dropdown list of your configured boxes in the terminal that you can choose to interact with.
+
+#### working with your boxes
+
+each selected box has its own dedicated drodown, with many available options:
+
+![](dist/assets/dropdown.png)
+
+- toggle a box to `active` to set it as your current challenge
+- update box information
+- view metadata about the box (difficulty, OS, date created, last updated)
+- check your connection status
+- edit notes about that box in your default editor
+- quickview your notes in rendered markdown
+- view and set the `user` and `root` flags
+- return to the main menu with all of your boxes
+
+----
+
+## docker environment(s)
 
 #### running sneak in docker
 
@@ -80,24 +157,8 @@ if you want to switch back to running `sneak` outside of docker with the same pe
 sneak --unmount (-u)
 ```
 
-### connecting to the VPN
+----
 
-after your configs have been set, run:
+## the sneak db
 
-```
-sneak vpn setup
-```
-
-this will prompt you for your generated `.ovpn` file from `hack the box' and create your `privoxy` config file so you can connect to the container locally via reverse proxy.
-
-to actually connect, run:
-
-```
-sneak vpn connect
-```
-
-this will start the `openvpn` client. you can always verify your connection with:
-
-```
-sneak vpn test
-```
+`sneak` uses `bolthold` (which wraps `boltdb`) to manage data locally beyond the user's custom configurations at the application level. if you want to interact with the database, there's a hidden command (`sneak db`) that will enable you to view the bucket(s), reset the database, as well as back it up
