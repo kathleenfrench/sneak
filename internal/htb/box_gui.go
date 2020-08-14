@@ -11,7 +11,7 @@ type BoxGUI struct {
 	usecase             box.Usecase
 }
 
-// NewBoxGUI instantiates a new box gui interface
+// NewBoxGUI instantiates a new box gui struct
 func NewBoxGUI(use box.Usecase) *BoxGUI {
 	return &BoxGUI{
 		singleBoxTableShown: false,

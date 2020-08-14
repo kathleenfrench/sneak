@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/fatih/color"
+	"github.com/kathleenfrench/common/gui"
 	"github.com/kathleenfrench/sneak/internal/htb"
 	"github.com/kathleenfrench/sneak/internal/repository"
 	pRepo "github.com/kathleenfrench/sneak/internal/repository/pipeline"
@@ -51,17 +52,65 @@ var pipelineNewCmd = &cobra.Command{
 	Use:     "new",
 	Aliases: []string{"add", "create"},
 	Short:   "add a new pipeline to your sneak workflow",
-	RunE: func(cmd *cobra.Command, args []string) error {
+	Run: func(cmd *cobra.Command, args []string) {
 		newPipeline, err := pipelineGUI.PromptUserForPipelineData()
 		if err != nil {
-			return err
+			gui.ExitWithError(err)
 		}
 
-		color.Green("new pipeline: %v", newPipeline)
-		return nil
+		err = pipelineUsecase.SavePipeline(newPipeline)
+		if err != nil {
+			gui.ExitWithError(err)
+		}
+
+		gui.Info("+1", fmt.Sprintf("%s was added successfully!", newPipeline.Name), newPipeline.Name)
+	},
+}
+
+var pipelineListCmd = &cobra.Command{
+	Use:     "list",
+	Short:   "list all of your pipelines",
+	Aliases: []string{"ls"},
+	Run: func(cmd *cobra.Command, args []string) {
+		pipelines, err := pipelineUsecase.GetAll()
+		if err != nil {
+			gui.ExitWithError(err)
+		}
+
+		if len(pipelines) == 0 {
+			gui.Warn("you don't have any pipelines configured yet! run `sneak pipeline new` to get started", nil)
+			return
+		}
+
+		selection := pipelineGUI.SelectPipelineFromDropdown(pipelines)
+
+		if err = pipelineGUI.SelectPipelineActionsDropdown(selection, pipelines); err != nil {
+			gui.ExitWithError(err)
+		}
+	},
+}
+
+var pipelineManifestActionsCmd = &cobra.Command{
+	Use:     "actions",
+	Aliases: []string{"action", "act"},
+	Short:   "define common actions for re-use between multiple pipelines in your pipeline manifest",
+	Run: func(cmd *cobra.Command, args []string) {
+		color.Red("todo")
+	},
+}
+
+var pipelineManifestWordlistsCmd = &cobra.Command{
+	Use:     "wordlists",
+	Aliases: []string{"word", "w", "wl", "wordlist"},
+	Short:   "add wordlists for re-use between multiple pipelines in your pipeline manifest",
+	Run: func(cmd *cobra.Command, args []string) {
+		color.Red("todo")
 	},
 }
 
 func init() {
 	pipelineCmd.AddCommand(pipelineNewCmd)
+	pipelineCmd.AddCommand(pipelineListCmd)
+	pipelineCmd.AddCommand(pipelineManifestActionsCmd)
+	pipelineCmd.AddCommand(pipelineManifestWordlistsCmd)
 }

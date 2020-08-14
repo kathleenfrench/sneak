@@ -5,9 +5,16 @@ import (
 
 	"github.com/kathleenfrench/common/gui"
 	"github.com/kathleenfrench/sneak/internal/htb"
+	"github.com/kathleenfrench/sneak/internal/repository"
 	"github.com/kathleenfrench/sneak/internal/repository/box"
 	boxusecase "github.com/kathleenfrench/sneak/internal/usecase/box"
 	"github.com/spf13/cobra"
+)
+
+var (
+	boxUsecase    boxusecase.Usecase
+	boxRepository repository.BoxRepository
+	boxGUI        *htb.BoxGUI
 )
 
 // todo: add dropdown of options - add, list, etc
@@ -15,6 +22,15 @@ var boxSubCmd = &cobra.Command{
 	Use:     "box",
 	Aliases: []string{"boxes", "b"},
 	Short:   "do stuff with htb boxes",
+	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+		boxRepository = box.NewBoxRepository(db)
+		boxUsecase = boxusecase.NewUsecase(boxRepository)
+		boxGUI = htb.NewBoxGUI(boxUsecase)
+		return nil
+	},
+	Run: func(cmd *cobra.Command, args []string) {
+		cmd.Usage()
+	},
 }
 
 var newBoxCmd = &cobra.Command{
@@ -22,11 +38,7 @@ var newBoxCmd = &cobra.Command{
 	Short:   "add a new box",
 	Aliases: []string{"add", "a"},
 	Run: func(cmd *cobra.Command, args []string) {
-		boxRepo := box.NewBoxRepository(db)
-		boxUsecase := boxusecase.NewUsecase(boxRepo)
-		nb := htb.NewBoxGUI(boxUsecase)
-
-		box, err := nb.PromptUserForBoxData()
+		box, err := boxGUI.PromptUserForBoxData()
 		if err != nil {
 			gui.ExitWithError(err)
 		}
@@ -45,10 +57,7 @@ var listBoxesCmd = &cobra.Command{
 	Short:   "list all of your boxes",
 	Aliases: []string{"ls"},
 	Run: func(cmd *cobra.Command, args []string) {
-		br := box.NewBoxRepository(db)
-		bu := boxusecase.NewUsecase(br)
-
-		boxes, err := bu.GetAll()
+		boxes, err := boxUsecase.GetAll()
 		if err != nil {
 			gui.ExitWithError(err)
 		}
@@ -58,10 +67,9 @@ var listBoxesCmd = &cobra.Command{
 			return
 		}
 
-		nb := htb.NewBoxGUI(bu)
-		selection := nb.SelectBoxFromDropdown(boxes)
+		selection := boxGUI.SelectBoxFromDropdown(boxes)
 
-		if err = nb.SelectBoxActionsDropdown(selection, boxes); err != nil {
+		if err = boxGUI.SelectBoxActionsDropdown(selection, boxes); err != nil {
 			gui.ExitWithError(err)
 		}
 	},

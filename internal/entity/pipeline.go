@@ -7,8 +7,10 @@ import (
 
 // PipelinesManifest represents the physical file representation of pipeline data
 type PipelinesManifest struct {
-	Version   string    `yaml:"version"`
-	Pipelines Pipelines `yaml:"pipelines,omitempty"`
+	Version   string             `yaml:"version"`
+	Pipelines Pipelines          `yaml:"pipelines,omitempty"`
+	Actions   map[string]*Action `yaml:"actions,omitempty"`
+	WordLists []string           `yaml:"wordlist_paths,omitempty"`
 }
 
 // Pipelines represent a collection of pipelines
@@ -17,10 +19,8 @@ type Pipelines map[string]*Pipeline
 // Pipeline represents the document saving a user's workflow jobs when investigating a target
 type Pipeline struct {
 	Name        string
-	Description string             `yaml:"description,omitempty"`
-	Jobs        map[string]*Job    `yaml:"jobs,omitempty"`
-	WordLists   []string           `yaml:"wordlist_paths,omitempty"`
-	Actions     map[string]*Action `yaml:"actions,omitempty"`
+	Description string          `yaml:"description,omitempty"`
+	Jobs        map[string]*Job `yaml:"jobs,omitempty"`
 }
 
 // Job represents a collection of tasks to run
@@ -38,6 +38,7 @@ type Task struct {
 	ScriptPath  string  `yaml:"script_path,omitempty"`
 	OutputPath  string  `yaml:"output_path,omitempty"`
 	Skip        bool    `yaml:"skip,omitempty"`
+	Action      *Action `yaml:"action,omitempty"`
 	output      string
 	complete    bool
 	active      bool

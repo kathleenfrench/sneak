@@ -16,6 +16,7 @@ type Usecase interface {
 	RemovePipeline(name string) error
 	ManifestExists() (bool, error)
 	NewManifest() error
+	SavePipeline(p *entity.Pipeline) error
 }
 
 type pipelineUsecase struct {
@@ -47,6 +48,10 @@ func (u *pipelineUsecase) NewManifest() error {
 	}
 
 	return nil
+}
+
+func (u *pipelineUsecase) SavePipeline(p *entity.Pipeline) error {
+	return u.Repository.SavePipeline(p)
 }
 
 func (u *pipelineUsecase) NewPipeline(p *entity.Pipeline) error {
