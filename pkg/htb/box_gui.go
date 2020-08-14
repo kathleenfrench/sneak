@@ -1,42 +1,43 @@
 package htb
 
 import (
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
 	"time"
 
-	"github.com/asaskevich/govalidator"
 	"github.com/fatih/color"
 	"github.com/jedib0t/go-pretty/table"
 	"github.com/kathleenfrench/common/fs"
 	"github.com/kathleenfrench/common/gui"
 	"github.com/kathleenfrench/sneak/internal/config"
+	"github.com/kathleenfrench/sneak/internal/entity"
 	"github.com/kathleenfrench/sneak/internal/helpers"
+	"github.com/kathleenfrench/sneak/internal/usecase/boxusecase"
 	"github.com/spf13/viper"
-	"github.com/timshannon/bolthold"
 
 	humanize "github.com/dustin/go-humanize"
 )
 
 // BoxGUI is an interface for methods managing the box GUI
 type BoxGUI interface {
-	SelectBoxFromDropdown(boxes []Box) Box
-	SelectBoxActionsDropdown(db *bolthold.Store, box Box, boxes []Box) error
-	PromptUserForBoxData() (Box, error)
+	SelectBoxFromDropdown(boxes []entity.Box) entity.Box
+	SelectBoxActionsDropdown(box entity.Box, boxes []entity.Box) error
+	PromptUserForBoxData() (entity.Box, error)
 }
 
 type boxGUI struct {
 	singleBoxTableShown bool
 	activeBox           string
+	usecase             boxusecase.Usecase
 }
 
 // NewBoxGUI instantiates a new box gui interface
-func NewBoxGUI() BoxGUI {
+func NewBoxGUI(use boxusecase.Usecase) BoxGUI {
 	return &boxGUI{
 		singleBoxTableShown: false,
 		activeBox:           "",
+		usecase:             use,
 	}
 }
 
@@ -56,8 +57,8 @@ var difficulties = []string{
 }
 
 // PromptUserForBoxData prompts the user for values about the htb machine they want to add
-func (bg *boxGUI) PromptUserForBoxData() (Box, error) {
-	box := Box{
+func (bg *boxGUI) PromptUserForBoxData() (entity.Box, error) {
+	box := entity.Box{
 		Name:        gui.InputPromptWithResponse("what is the name of the box?", "", true),
 		IP:          gui.InputPromptWithResponse("what is its IP?", "", true),
 		Description: gui.InputPromptWithResponse("provide a short description of the box if you want", "", true),
@@ -67,7 +68,7 @@ func (bg *boxGUI) PromptUserForBoxData() (Box, error) {
 		OS:          gui.SelectPromptWithResponse("what is the OS?", osOptions, nil, true),
 		Difficulty:  gui.SelectPromptWithResponse("what is its difficulty?", difficulties, nil, true),
 		Up:          false,
-		Flags: Flags{
+		Flags: entity.Flags{
 			Root: "",
 			User: "",
 		},
@@ -75,28 +76,12 @@ func (bg *boxGUI) PromptUserForBoxData() (Box, error) {
 		LastUpdated: time.Now(),
 	}
 
-	if err := box.validate(); err != nil {
+	if err := box.Validate(); err != nil {
 		return box, err
 	}
 
 	box.Hostname = fmt.Sprintf("%s.htb", box.Name)
 	return box, nil
-}
-
-func (b Box) validate() error {
-	if b.Name == "" {
-		return errors.New("setting a name for the box is required")
-	}
-
-	if !govalidator.IsIP(b.IP) {
-		gui.Warn("invalid IP address", b.IP)
-		b.IP = gui.InputPromptWithResponse("what is its IP?", "", true)
-		if !govalidator.IsIP(b.IP) {
-			return errors.New(b.IP + " is not a valid IP address")
-		}
-	}
-
-	return nil
 }
 
 // CompletionColorizer returns an icon with the completion status of a box
@@ -124,7 +109,7 @@ func DifficultyColorizer(diff string) string {
 	return ""
 }
 
-func constructBoxListing(box Box) string {
+func constructBoxListing(box entity.Box) string {
 	head := fmt.Sprintf(
 		"%s - [%s][%s][%s]",
 		box.Name,
@@ -136,8 +121,8 @@ func constructBoxListing(box Box) string {
 	return head
 }
 
-func makeGuiBoxMappings(boxes []Box) (keys []string, mapping map[string]Box) {
-	mapping = make(map[string]Box)
+func makeGuiBoxMappings(boxes []entity.Box) (keys []string, mapping map[string]entity.Box) {
+	mapping = make(map[string]entity.Box)
 
 	for _, b := range boxes {
 		name := constructBoxListing(b)
@@ -149,7 +134,7 @@ func makeGuiBoxMappings(boxes []Box) (keys []string, mapping map[string]Box) {
 }
 
 // SelectBoxFromDropdown lists a collection of boxes to choose from in a terminal dropdown
-func (bg *boxGUI) SelectBoxFromDropdown(boxes []Box) Box {
+func (bg *boxGUI) SelectBoxFromDropdown(boxes []entity.Box) entity.Box {
 	boxNames, boxMap := makeGuiBoxMappings(boxes)
 	selection := gui.SelectPromptWithResponse("select a box", boxNames, nil, false)
 	selected := boxMap[selection]
@@ -157,7 +142,7 @@ func (bg *boxGUI) SelectBoxFromDropdown(boxes []Box) Box {
 }
 
 // PrintBoxDataTable poutputs box data in a readable table in the terminal window
-func PrintBoxDataTable(box Box) {
+func PrintBoxDataTable(box entity.Box) {
 	data := []table.Row{
 		{"name", box.Name},
 		{"IP", box.IP},
@@ -176,7 +161,7 @@ func PrintBoxDataTable(box Box) {
 	helpers.Spacer()
 }
 
-func printFlagTable(flags Flags) {
+func printFlagTable(flags entity.Flags) {
 	userFlag := flags.User
 	rootFlag := flags.Root
 
@@ -222,7 +207,7 @@ var boxActions = []string{
 }
 
 // SelectBoxActionsDropdown lists available actions with a single box or the ability to return to the 'main menu' of boxes
-func (bg *boxGUI) SelectBoxActionsDropdown(db *bolthold.Store, box Box, boxes []Box) error {
+func (bg *boxGUI) SelectBoxActionsDropdown(box entity.Box, boxes []entity.Box) error {
 	if box.Active {
 		bg.activeBox = box.Name
 	}
@@ -238,7 +223,7 @@ func (bg *boxGUI) SelectBoxActionsDropdown(db *bolthold.Store, box Box, boxes []
 	switch selection {
 	case seeTable:
 		PrintBoxDataTable(box)
-		return bg.SelectBoxActionsDropdown(db, box, boxes)
+		return bg.SelectBoxActionsDropdown(box, boxes)
 	case toggleActiveStatus:
 		switch box.Active {
 		case true:
@@ -249,7 +234,7 @@ func (bg *boxGUI) SelectBoxActionsDropdown(db *bolthold.Store, box Box, boxes []
 				box.Active = false
 				bg.activeBox = ""
 			default:
-				return bg.SelectBoxActionsDropdown(db, box, boxes)
+				return bg.SelectBoxActionsDropdown(box, boxes)
 			}
 		default:
 			color.Red("%s is not currently set to active", box.Name)
@@ -259,12 +244,12 @@ func (bg *boxGUI) SelectBoxActionsDropdown(db *bolthold.Store, box Box, boxes []
 				box.Active = true
 				bg.activeBox = box.Name
 			default:
-				return bg.SelectBoxActionsDropdown(db, box, boxes)
+				return bg.SelectBoxActionsDropdown(box, boxes)
 			}
 		}
 
 		// write the change to the db
-		err := SaveBox(db, box)
+		err := bg.usecase.Save(box)
 		if err != nil {
 			return err
 		}
@@ -272,12 +257,12 @@ func (bg *boxGUI) SelectBoxActionsDropdown(db *bolthold.Store, box Box, boxes []
 		color.Green("successfully changed the active status of %s!", box.Name)
 
 		// after making that change, re-fetch all of our boxes for up to date info
-		boxes, err = GetAllBoxes(db)
+		boxes, err = bg.usecase.GetAll()
 		if err != nil {
 			return err
 		}
 
-		return bg.SelectBoxActionsDropdown(db, box, boxes)
+		return bg.SelectBoxActionsDropdown(box, boxes)
 	case quickViewNotes:
 		note, err := checkForNoteFile(box.Name)
 		if err != nil {
@@ -290,7 +275,7 @@ func (bg *boxGUI) SelectBoxActionsDropdown(db *bolthold.Store, box Box, boxes []
 			fmt.Println(helpers.RenderMarkdown(note))
 		}
 
-		return bg.SelectBoxActionsDropdown(db, box, boxes)
+		return bg.SelectBoxActionsDropdown(box, boxes)
 	case checkConnection:
 		err := helpers.SudoPing(box.IP)
 		if err != nil {
@@ -299,7 +284,7 @@ func (bg *boxGUI) SelectBoxActionsDropdown(db *bolthold.Store, box Box, boxes []
 			gui.Info("+1", "reachable!", box.IP)
 		}
 
-		return bg.SelectBoxActionsDropdown(db, box, boxes)
+		return bg.SelectBoxActionsDropdown(box, boxes)
 	case openNotes:
 		note, err := checkForNoteFile(box.Name)
 		if err != nil {
@@ -313,22 +298,22 @@ func (bg *boxGUI) SelectBoxActionsDropdown(db *bolthold.Store, box Box, boxes []
 			return err
 		}
 
-		return bg.SelectBoxActionsDropdown(db, box, boxes)
+		return bg.SelectBoxActionsDropdown(box, boxes)
 	case editDescription:
 		box.Description = gui.InputPromptWithResponse("provide a new description", "", true)
 		// write the change to the db
-		err := SaveBox(db, box)
+		err := bg.usecase.Save(box)
 		if err != nil {
 			return err
 		}
 
 		// after making that change, re-fetch all of our boxes for up to date info
-		boxes, err = GetAllBoxes(db)
+		boxes, err = bg.usecase.GetAll()
 		if err != nil {
 			return err
 		}
 
-		return bg.SelectBoxActionsDropdown(db, box, boxes)
+		return bg.SelectBoxActionsDropdown(box, boxes)
 	case flags:
 		printFlagTable(box.Flags)
 		addOrUpdate := gui.ConfirmPrompt("do you want to update any flag values?", "", false, true)
@@ -343,23 +328,23 @@ func (bg *boxGUI) SelectBoxActionsDropdown(db *bolthold.Store, box Box, boxes []
 			}
 
 			// write the change to the db
-			err := SaveBox(db, box)
+			err := bg.usecase.Save(box)
 			if err != nil {
 				return err
 			}
 
 			// after making that change, re-fetch all of our boxes for up to date info
-			boxes, err = GetAllBoxes(db)
+			boxes, err = bg.usecase.GetAll()
 			if err != nil {
 				return err
 			}
 
 			fallthrough
 		default:
-			return bg.SelectBoxActionsDropdown(db, box, boxes)
+			return bg.SelectBoxActionsDropdown(box, boxes)
 		}
 	case returnToBoxes:
-		return bg.SelectBoxActionsDropdown(db, bg.SelectBoxFromDropdown(boxes), boxes)
+		return bg.SelectBoxActionsDropdown(bg.SelectBoxFromDropdown(boxes), boxes)
 	case quit:
 		os.Exit(0)
 	}

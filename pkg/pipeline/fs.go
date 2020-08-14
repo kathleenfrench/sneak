@@ -7,7 +7,7 @@ import (
 )
 
 // Save saves the pipeline file with pipelines
-func (m *pipelineManager) Save(p *Pipelines) error {
+func (m *pipelineManager) Save(p *Pipeline) error {
 	path := m.path
 	pipelineFile, err := yaml.Marshal(p)
 	if err != nil {
@@ -26,12 +26,4 @@ func (m *pipelineManager) Save(p *Pipelines) error {
 	}
 
 	return nil
-}
-
-func (m *pipelineManager) GetAll() (*Pipelines, error) {
-	return nil, nil
-}
-
-func (m *pipelineManager) GetByName(name string) (*Pipeline, error) {
-	return nil, nil
 }

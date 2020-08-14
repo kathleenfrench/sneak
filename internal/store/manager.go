@@ -14,7 +14,7 @@ import (
 	"github.com/davecgh/go-spew/spew"
 	"github.com/fatih/color"
 	"github.com/kathleenfrench/common/fs"
-	"github.com/kathleenfrench/sneak/pkg/htb"
+	"github.com/kathleenfrench/sneak/internal/entity"
 	kval "github.com/kval-access-language/kval-boltdb"
 	"github.com/olekukonko/tablewriter"
 )
@@ -86,10 +86,10 @@ type item struct {
 	Nested bool
 }
 
-type box struct {
-	Key   string
-	Value htb.Box
-}
+// type box struct {
+// 	Key   string
+// 	Value entity.Box
+// }
 
 type bucket struct {
 	Name string
@@ -283,7 +283,7 @@ func (d dbDisplay) DumpBucketItems(w io.Writer, bucket string, items []item) {
 		} else {
 			reader := bytes.NewReader([]byte(i.Value))
 			decoder := gob.NewDecoder(reader)
-			var bx htb.Box
+			var bx entity.Box
 			decoder.Decode(&bx)
 			row = append(row, i.Key, spew.Sdump(bx))
 		}

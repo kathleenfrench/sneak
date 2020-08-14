@@ -4,6 +4,8 @@ import (
 	"fmt"
 
 	"github.com/kathleenfrench/common/gui"
+	"github.com/kathleenfrench/sneak/internal/repository/box"
+	"github.com/kathleenfrench/sneak/internal/usecase/boxusecase"
 	"github.com/kathleenfrench/sneak/pkg/htb"
 	"github.com/spf13/cobra"
 )
@@ -20,14 +22,16 @@ var newBoxCmd = &cobra.Command{
 	Short:   "add a new box",
 	Aliases: []string{"add", "a"},
 	Run: func(cmd *cobra.Command, args []string) {
-		nb := htb.NewBoxGUI()
+		boxRepo := box.NewBoxRepository(db)
+		boxUsecase := boxusecase.NewUsecase(boxRepo)
+		nb := htb.NewBoxGUI(boxUsecase)
 
 		box, err := nb.PromptUserForBoxData()
 		if err != nil {
 			gui.ExitWithError(err)
 		}
 
-		err = htb.SaveBox(db, box)
+		err = boxUsecase.Save(box)
 		if err != nil {
 			gui.ExitWithError(err)
 		}
@@ -41,7 +45,10 @@ var listBoxesCmd = &cobra.Command{
 	Short:   "list all of your boxes",
 	Aliases: []string{"ls"},
 	Run: func(cmd *cobra.Command, args []string) {
-		boxes, err := htb.GetAllBoxes(db)
+		br := box.NewBoxRepository(db)
+		bu := boxusecase.NewUsecase(br)
+
+		boxes, err := bu.GetAll()
 		if err != nil {
 			gui.ExitWithError(err)
 		}
@@ -51,11 +58,10 @@ var listBoxesCmd = &cobra.Command{
 			return
 		}
 
-		nb := htb.NewBoxGUI()
-
+		nb := htb.NewBoxGUI(bu)
 		selection := nb.SelectBoxFromDropdown(boxes)
 
-		if err = nb.SelectBoxActionsDropdown(db, selection, boxes); err != nil {
+		if err = nb.SelectBoxActionsDropdown(selection, boxes); err != nil {
 			gui.ExitWithError(err)
 		}
 	},

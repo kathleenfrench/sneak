@@ -4,9 +4,10 @@ import "github.com/kathleenfrench/sneak/pkg/file"
 
 // Manager interface wraps methods used for managing pipelines in sneak
 type Manager interface {
-	Save(p *Pipelines) error
+	Save(p *Pipeline) error
 	GetAll() (*Pipelines, error)
 	GetByName(name string) (*Pipeline, error)
+	Remove(name string) error
 }
 
 type pipelineManager struct {
