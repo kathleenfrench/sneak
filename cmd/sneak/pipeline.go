@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/fatih/color"
+	"github.com/kathleenfrench/sneak/internal/htb"
 	"github.com/kathleenfrench/sneak/internal/repository"
 	pRepo "github.com/kathleenfrench/sneak/internal/repository/pipeline"
 	"github.com/kathleenfrench/sneak/internal/usecase/pipeline"
@@ -14,6 +15,7 @@ import (
 var (
 	pipelineUsecase    pipeline.Usecase
 	pipelineRepository repository.PipelineRepository
+	pipelineGUI        *htb.PipelineGUI
 )
 
 var pipelineCmd = &cobra.Command{
@@ -24,6 +26,7 @@ var pipelineCmd = &cobra.Command{
 		manifestPath := fmt.Sprintf("%s/manifest.yaml", viper.GetString("cfg_dir"))
 		pipelineRepository = pRepo.NewPipelineRepository(manifestPath)
 		pipelineUsecase = pipeline.NewPipelineUsecase(pipelineRepository)
+		pipelineGUI = htb.NewPipelineGUI(pipelineUsecase)
 		manifestExists, err := pipelineUsecase.ManifestExists()
 		switch {
 		case err != nil:
@@ -48,8 +51,14 @@ var pipelineNewCmd = &cobra.Command{
 	Use:     "new",
 	Aliases: []string{"add", "create"},
 	Short:   "add a new pipeline to your sneak workflow",
-	Run: func(cmd *cobra.Command, args []string) {
-		color.Green("hello")
+	RunE: func(cmd *cobra.Command, args []string) error {
+		newPipeline, err := pipelineGUI.PromptUserForPipelineData()
+		if err != nil {
+			return err
+		}
+
+		color.Green("new pipeline: %v", newPipeline)
+		return nil
 	},
 }
 
