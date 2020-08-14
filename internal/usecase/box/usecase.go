@@ -1,4 +1,4 @@
-package boxusecase
+package box
 
 import (
 	"github.com/kathleenfrench/sneak/internal/entity"

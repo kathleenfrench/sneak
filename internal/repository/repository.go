@@ -15,3 +15,7 @@ type BoxRepository interface {
 	BatchSave(boxes []entity.Box) error
 	GetAll() ([]entity.Box, error)
 }
+
+// PipelineRepository manages methods for working with pipeliens
+type PipelineRepository interface {
+}

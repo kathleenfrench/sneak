@@ -1,4 +1,4 @@
-package pipeline
+package entity
 
 // Pipelines represent a collection of pipelines
 type Pipelines map[string]Pipeline

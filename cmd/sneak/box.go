@@ -4,9 +4,9 @@ import (
 	"fmt"
 
 	"github.com/kathleenfrench/common/gui"
+	"github.com/kathleenfrench/sneak/internal/htb"
 	"github.com/kathleenfrench/sneak/internal/repository/box"
-	"github.com/kathleenfrench/sneak/internal/usecase/boxusecase"
-	"github.com/kathleenfrench/sneak/pkg/htb"
+	boxusecase "github.com/kathleenfrench/sneak/internal/usecase/box"
 	"github.com/spf13/cobra"
 )
 
