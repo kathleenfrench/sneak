@@ -1,20 +1,22 @@
 package pipeline
 
-import (
-	"github.com/kathleenfrench/common/fs"
-)
+import "github.com/kathleenfrench/sneak/pkg/file"
 
 // Manager interface wraps methods used for managing pipelines in sneak
 type Manager interface {
-	Save(p *Pipeline, path string) error
-	CreateIfNotExist(path string) error
+	Save(p *Pipelines) error
+	GetAll() (*Pipelines, error)
+	GetByName(name string) (*Pipeline, error)
 }
 
 type pipelineManager struct {
-	fs.Manager
+	file.Manager
+	path string
 }
 
 // NewPipelineManager instantiates a new instance of the Manager interface
-func NewPipelineManager() Manager {
-	return &pipelineManager{}
+func NewPipelineManager(path string) Manager {
+	return &pipelineManager{
+		path: path,
+	}
 }

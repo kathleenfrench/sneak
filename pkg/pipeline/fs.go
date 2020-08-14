@@ -2,26 +2,25 @@ package pipeline
 
 import (
 	"fmt"
-	"io/ioutil"
 
-	"github.com/kathleenfrench/common/fs"
 	"gopkg.in/yaml.v2"
 )
 
 // Save saves the pipeline file with pipelines
-func (m *pipelineManager) Save(p *Pipeline, path string) error {
-	wfile, err := yaml.Marshal(p)
+func (m *pipelineManager) Save(p *Pipelines) error {
+	path := m.path
+	pipelineFile, err := yaml.Marshal(p)
 	if err != nil {
 		return fmt.Errorf("could not marshal pipeline file: %w", err)
 	}
 
 	// create file if it does not exist
-	err = fs.CreateFile(path)
+	err = m.Touch(path)
 	if err != nil {
 		return fmt.Errorf("could not create a pipeline file at %s - %w", path, err)
 	}
 
-	err = ioutil.WriteFile(path, wfile, 0600)
+	err = m.Write(path, pipelineFile)
 	if err != nil {
 		return fmt.Errorf("could not save pipeline file: %w", err)
 	}
@@ -29,6 +28,10 @@ func (m *pipelineManager) Save(p *Pipeline, path string) error {
 	return nil
 }
 
-func (m *pipelineManager) CreateIfNotExist(path string) error {
-	return nil
+func (m *pipelineManager) GetAll() (*Pipelines, error) {
+	return nil, nil
+}
+
+func (m *pipelineManager) GetByName(name string) (*Pipeline, error) {
+	return nil, nil
 }
