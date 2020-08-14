@@ -4,8 +4,8 @@ import (
 	"fmt"
 
 	"github.com/kathleenfrench/common/gui"
-	"github.com/kathleenfrench/sneak/internal/helpers"
 	"github.com/kathleenfrench/sneak/internal/store"
+	"github.com/kathleenfrench/sneak/pkg/utils"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -40,7 +40,7 @@ var dbResetCmd = &cobra.Command{
 	Use:     "reset",
 	Aliases: []string{"nuke", "clear"},
 	Run: func(cmd *cobra.Command, args []string) {
-		helpers.Spacer()
+		utils.Spacer()
 		if resetBucket != "" {
 			store.EmptyBuckets(db, resetBucket)
 			gui.Info("fire", "bucket emptied", resetBucket)
@@ -61,7 +61,7 @@ var dbBackupCmd = &cobra.Command{
 		}
 	},
 	Run: func(cmd *cobra.Command, args []string) {
-		helpers.Spacer()
+		utils.Spacer()
 		dbdir := viper.GetString("data")
 
 		gui.Info("popcorn", "backing up your local DB", fmt.Sprintf("%s/sneak_backup.db", dbdir))

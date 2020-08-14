@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"github.com/kathleenfrench/common/fs"
-	"github.com/kathleenfrench/sneak/pkg/htb"
+	"github.com/kathleenfrench/sneak/internal/repository/box"
 	"github.com/mitchellh/go-homedir"
 	"github.com/timshannon/bolthold"
 	"go.etcd.io/bbolt"
@@ -31,7 +31,8 @@ func GetDataDirectory() (string, error) {
 }
 
 var sneakBuckets = map[string]bool{
-	"Box": true,
+	"Box":      true,
+	"Pipeline": true,
 }
 
 // Buckets returns all of the db buckets for sneak
@@ -44,7 +45,10 @@ func Buckets(db *bolthold.Store, name string) []string {
 
 	switch name {
 	case "Box":
-		buckets = append(buckets, strings.Join(new(htb.Box).List(db), "\n"))
+		boxRepository := box.NewBoxRepository(db)
+		buckets = append(buckets, strings.Join(boxRepository.List(), "\n"))
+	// case "Pipeline":
+	// 	buckets = append(buckets, strings.Join(new(pipeline.Pipeline).List(db), "\n"))
 	default:
 		buckets = append(buckets, fmt.Sprintf("%s is not a valid bucket in sneak", name))
 	}

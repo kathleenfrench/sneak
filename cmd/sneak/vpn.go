@@ -8,14 +8,13 @@ import (
 
 	"github.com/fatih/color"
 	"github.com/kathleenfrench/common/gui"
-	"github.com/kathleenfrench/sneak/internal/helpers"
 	"github.com/kathleenfrench/sneak/internal/vpn"
+	"github.com/kathleenfrench/sneak/pkg/utils"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
 
 var openVPN *vpn.OpenVPN
-var home string
 
 var vpnCmd = &cobra.Command{
 	Use:   "vpn",
@@ -129,7 +128,7 @@ var vpnUpdateCmd = &cobra.Command{
 var vpnTestCmd = &cobra.Command{
 	Use:     "test",
 	Short:   "test your vpn connection",
-	Aliases: []string{"ping", "check"},
+	Aliases: []string{"ping", "check", "status"},
 	Run: func(cmd *cobra.Command, args []string) {
 		if !openVPN.AlreadySetup() {
 			gui.ExitWithError("you have not setup openvpn yet with sneak - run 'sneak vpn setup'")
@@ -141,7 +140,7 @@ var vpnTestCmd = &cobra.Command{
 
 		gui.Info("popcorn", fmt.Sprintf("\033[H\033[2J\nchecking..."), viper.GetString("htb_network_ip"))
 		gui.Spin.Start()
-		err := helpers.SudoPing(viper.GetString("htb_network_ip"))
+		err := utils.SudoPing(viper.GetString("htb_network_ip"))
 		gui.Spin.Stop()
 		if err != nil {
 			gui.Warn("your connection could not be established", viper.Get("htb_network_ip"))
