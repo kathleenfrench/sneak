@@ -5,7 +5,7 @@ import (
 	"github.com/jedib0t/go-pretty/table"
 	"github.com/kathleenfrench/common/gui"
 	"github.com/kathleenfrench/sneak/internal/entity"
-	"github.com/kathleenfrench/sneak/internal/helpers"
+	"github.com/kathleenfrench/sneak/pkg/utils"
 )
 
 // PrintBoxDataTable poutputs box data in a readable table in the terminal window
@@ -23,9 +23,9 @@ func PrintBoxDataTable(box entity.Box) {
 		{"last updated", humanize.Time(box.LastUpdated)},
 	}
 
-	helpers.Spacer()
+	utils.Spacer()
 	gui.SideBySideTable(data, "Red")
-	helpers.Spacer()
+	utils.Spacer()
 }
 
 func printFlagTable(flags entity.Flags) {
@@ -45,7 +45,7 @@ func printFlagTable(flags entity.Flags) {
 		{"root", rootFlag},
 	}
 
-	helpers.Spacer()
+	utils.Spacer()
 	gui.SideBySideTable(data, "Red")
-	helpers.Spacer()
+	utils.Spacer()
 }

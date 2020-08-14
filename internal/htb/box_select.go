@@ -7,7 +7,7 @@ import (
 	"github.com/fatih/color"
 	"github.com/kathleenfrench/common/gui"
 	"github.com/kathleenfrench/sneak/internal/entity"
-	"github.com/kathleenfrench/sneak/internal/helpers"
+	"github.com/kathleenfrench/sneak/pkg/utils"
 	"github.com/spf13/viper"
 )
 
@@ -100,12 +100,12 @@ func (bg *BoxGUI) SelectBoxActionsDropdown(box entity.Box, boxes []entity.Box) e
 		if len(note) == 0 {
 			color.Yellow("you have not started a note for %s yet!", box.Name)
 		} else {
-			fmt.Println(helpers.RenderMarkdown(note))
+			fmt.Println(utils.RenderMarkdown(note))
 		}
 
 		return bg.SelectBoxActionsDropdown(box, boxes)
 	case checkConnection:
-		err := helpers.SudoPing(box.IP)
+		err := utils.SudoPing(box.IP)
 		if err != nil {
 			gui.Warn("uh oh, that box couldn't be reached! verify that the machine is active and your VPN connection is still intact", box.IP)
 		} else {

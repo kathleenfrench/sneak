@@ -8,7 +8,7 @@ import (
 	"github.com/fatih/color"
 	"github.com/kathleenfrench/common/exec"
 	"github.com/kathleenfrench/common/gui"
-	"github.com/kathleenfrench/sneak/internal/helpers"
+	"github.com/kathleenfrench/sneak/pkg/utils"
 	"github.com/spf13/viper"
 )
 
@@ -91,7 +91,7 @@ func UpdateSettingsPrompt(viperSettings map[string]interface{}) error {
 
 		editExisting := gui.ConfirmPrompt("do you want to modify an existing url?", "", false, true)
 		if editExisting {
-			shortKeys := helpers.GetKeysFromMap(shorts)
+			shortKeys := utils.GetKeysFromMap(shorts)
 			editWhich := gui.SelectPromptWithResponse("which do you want to change?", shortKeys, nil, false)
 			changedValue = gui.InputPromptWithResponse(fmt.Sprintf("what do you want to change %s to?", editWhich), "", true)
 			color.Green("setting %s", fmt.Sprintf("webshort.%s", editWhich))

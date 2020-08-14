@@ -3,7 +3,7 @@ package sneak
 import (
 	"github.com/kathleenfrench/common/exec"
 	"github.com/kathleenfrench/common/gui"
-	"github.com/kathleenfrench/sneak/internal/helpers"
+	"github.com/kathleenfrench/sneak/pkg/utils"
 	"github.com/spf13/cobra"
 )
 
@@ -12,7 +12,7 @@ var gotoCmd = &cobra.Command{
 	Short: "open your browser to various resources",
 	Args:  cobra.MaximumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		shortcutKeys := helpers.GetKeysFromMap(sneakCfg.WebShortcuts)
+		shortcutKeys := utils.GetKeysFromMap(sneakCfg.WebShortcuts)
 		switch len(args) {
 		case 0:
 			// dropdown
