@@ -10,24 +10,23 @@ import (
 
 // Usecase is an interface for methods controlling pipelines
 type Usecase interface {
-	SavePipeline(p *entity.Pipeline) error
+	NewPipeline(p *entity.Pipeline) error
 	GetAll() (entity.Pipelines, error)
 	GetByName(name string) (*entity.Pipeline, error)
 	RemovePipeline(name string) error
 	ManifestExists() (bool, error)
+	NewManifest() error
 }
 
 type pipelineUsecase struct {
 	Repository repository.PipelineRepository
-	path       string
 	file       file.Manager
 }
 
 // NewPipelineUsecase instantiates a new pipeline usecase interface
-func NewPipelineUsecase(r repository.PipelineRepository, path string) Usecase {
+func NewPipelineUsecase(r repository.PipelineRepository) Usecase {
 	return &pipelineUsecase{
 		Repository: r,
-		path:       path,
 		file:       file.NewManager(),
 	}
 }
@@ -50,7 +49,7 @@ func (u *pipelineUsecase) NewManifest() error {
 	return nil
 }
 
-func (u *pipelineUsecase) SavePipeline(p *entity.Pipeline) error {
+func (u *pipelineUsecase) NewPipeline(p *entity.Pipeline) error {
 	return u.Repository.SavePipeline(p)
 }
 

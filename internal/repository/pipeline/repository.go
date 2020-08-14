@@ -43,12 +43,7 @@ func (r *pipelineRepository) SavePipeline(p *entity.Pipeline) error {
 }
 
 func (r *pipelineRepository) SaveManifest(m *entity.PipelinesManifest) error {
-	manifest, err := r.read()
-	if err != nil {
-		return err
-	}
-
-	return r.write(manifest)
+	return r.write(m)
 }
 
 func (r *pipelineRepository) RemovePipeline(name string) error {
