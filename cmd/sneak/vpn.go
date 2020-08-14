@@ -15,7 +15,6 @@ import (
 )
 
 var openVPN *vpn.OpenVPN
-var home string
 
 var vpnCmd = &cobra.Command{
 	Use:   "vpn",
@@ -129,7 +128,7 @@ var vpnUpdateCmd = &cobra.Command{
 var vpnTestCmd = &cobra.Command{
 	Use:     "test",
 	Short:   "test your vpn connection",
-	Aliases: []string{"ping", "check"},
+	Aliases: []string{"ping", "check", "status"},
 	Run: func(cmd *cobra.Command, args []string) {
 		if !openVPN.AlreadySetup() {
 			gui.ExitWithError("you have not setup openvpn yet with sneak - run 'sneak vpn setup'")

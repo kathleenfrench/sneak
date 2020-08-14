@@ -8,23 +8,27 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-// Save saves the workflow file with pipelines
-func Save(w *Workflow, wpath string) error {
-	wfile, err := yaml.Marshal(w)
+// Save saves the pipeline file with pipelines
+func (m *pipelineManager) Save(p *Pipeline, path string) error {
+	wfile, err := yaml.Marshal(p)
 	if err != nil {
-		return fmt.Errorf("could not marshal workflow file: %w", err)
+		return fmt.Errorf("could not marshal pipeline file: %w", err)
 	}
 
 	// create file if it does not exist
-	err = fs.CreateFile(wpath)
+	err = fs.CreateFile(path)
 	if err != nil {
-		return fmt.Errorf("could not create a workflow file at %s - %w", wpath, err)
+		return fmt.Errorf("could not create a pipeline file at %s - %w", path, err)
 	}
 
-	err = ioutil.WriteFile(wpath, wfile, 0600)
+	err = ioutil.WriteFile(path, wfile, 0600)
 	if err != nil {
-		return fmt.Errorf("could not save workflow file: %w", err)
+		return fmt.Errorf("could not save pipeline file: %w", err)
 	}
 
+	return nil
+}
+
+func (m *pipelineManager) CreateIfNotExist(path string) error {
 	return nil
 }

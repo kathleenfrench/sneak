@@ -1,15 +1,18 @@
 package pipeline
 
-// Workflow represents the document saving a user's workflow pipelines when investigating a target
-type Workflow struct {
-	Version   int                 `yaml:"version"`
-	Pipelines map[string]Pipeline `yaml:"pipelines,omitempty"`
-	WordLists []string            `yaml:"wordlist_paths,omitempty"`
-	Actions   map[string]Action   `yaml:"actions,omitempty"`
+// Pipelines represent a collection of pipelines
+type Pipelines map[string]Pipeline
+
+// Pipeline represents the document saving a user's workflow jobs when investigating a target
+type Pipeline struct {
+	Version   int               `yaml:"version"`
+	Jobs      map[string]Job    `yaml:"jobs,omitempty"`
+	WordLists []string          `yaml:"wordlist_paths,omitempty"`
+	Actions   map[string]Action `yaml:"actions,omitempty"`
 }
 
-// Pipeline represents a collection of tasks to run
-type Pipeline struct {
+// Job represents a collection of tasks to run
+type Job struct {
 	Name  string          `yaml:"name"`
 	Tasks map[string]Task `yaml:"tasks,omitempty"`
 	Tools []Tool          `yaml:"tools,omitempty"`

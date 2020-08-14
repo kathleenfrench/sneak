@@ -7,7 +7,6 @@ import (
 	"github.com/kathleenfrench/common/gui"
 	"github.com/kathleenfrench/sneak/internal/config"
 	"github.com/kathleenfrench/sneak/internal/store"
-	"github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/timshannon/bolthold"
@@ -38,15 +37,6 @@ var (
 var rootCmd = &cobra.Command{
 	Use:   "sneak",
 	Short: "a tool for common actions when pentesting/playing CTFs",
-	Run: func(cmd *cobra.Command, args []string) {
-		if mountData || unMountData {
-			gui.Info("+1", "your configs have been updated!", nil)
-			return
-		}
-
-		fmt.Println(config.Banner)
-		cmd.Usage()
-	},
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		err := config.SafeWriteConfig(mountData, unMountData)
 		if err != nil {
@@ -57,6 +47,15 @@ var rootCmd = &cobra.Command{
 		if err != nil {
 			gui.ExitWithError(err)
 		}
+	},
+	Run: func(cmd *cobra.Command, args []string) {
+		if mountData || unMountData {
+			gui.Info("+1", "your configs have been updated!", nil)
+			return
+		}
+
+		fmt.Println(config.Banner)
+		cmd.Usage()
 	},
 }
 
@@ -101,7 +100,6 @@ func initGlobalFlags() {
 }
 
 func init() {
-	home, _ = homedir.Dir()
 	cobra.OnInitialize(config.InitConfig)
 	initGlobalFlags()
 	rootCmd.AddCommand(configCmd)
@@ -109,4 +107,5 @@ func init() {
 	rootCmd.AddCommand(boxSubCmd)
 	rootCmd.AddCommand(gotoCmd)
 	rootCmd.AddCommand(vpnCmd)
+	rootCmd.AddCommand(pipelineCmd)
 }
