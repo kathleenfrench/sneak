@@ -86,11 +86,6 @@ type item struct {
 	Nested bool
 }
 
-// type box struct {
-// 	Key   string
-// 	Value entity.Box
-// }
-
 type bucket struct {
 	Name string
 }

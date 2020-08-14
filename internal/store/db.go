@@ -31,8 +31,7 @@ func GetDataDirectory() (string, error) {
 }
 
 var sneakBuckets = map[string]bool{
-	"Box":      true,
-	"Pipeline": true,
+	"Box": true,
 }
 
 // Buckets returns all of the db buckets for sneak
@@ -47,8 +46,6 @@ func Buckets(db *bolthold.Store, name string) []string {
 	case "Box":
 		boxRepository := box.NewBoxRepository(db)
 		buckets = append(buckets, strings.Join(boxRepository.List(), "\n"))
-	// case "Pipeline":
-	// 	buckets = append(buckets, strings.Join(new(pipeline.Pipeline).List(db), "\n"))
 	default:
 		buckets = append(buckets, fmt.Sprintf("%s is not a valid bucket in sneak", name))
 	}
