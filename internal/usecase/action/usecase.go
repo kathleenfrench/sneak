@@ -1,6 +1,8 @@
 package action
 
 import (
+	"fmt"
+
 	"github.com/kathleenfrench/sneak/internal/entity"
 	"github.com/kathleenfrench/sneak/internal/usecase/pipeline"
 )
@@ -27,13 +29,46 @@ func (u *actionUsecase) SaveAction(action *entity.Action) error {
 }
 
 func (u *actionUsecase) GetAll() (map[string]*entity.Action, error) {
-	return nil, nil
+	manifest, err := u.GetManifest()
+	if err != nil {
+		return nil, err
+	}
+
+	if manifest.Actions == nil {
+		manifest.Actions = make(map[string]*entity.Action)
+	}
+
+	return manifest.Actions, nil
 }
 
 func (u *actionUsecase) GetByName(name string) (*entity.Action, error) {
-	return nil, nil
+	manifest, err := u.GetManifest()
+	if err != nil {
+		return nil, err
+	}
+
+	if manifest.Actions == nil {
+		manifest.Actions = make(map[string]*entity.Action)
+	}
+
+	if m, ok := manifest.Actions[name]; ok {
+		return m, nil
+	}
+
+	return nil, fmt.Errorf("action %q not found", name)
 }
 
 func (u *actionUsecase) RemoveAction(name string) error {
-	return nil
+	_, err := u.GetByName(name)
+	if err != nil {
+		return err
+	}
+
+	manifest, err := u.GetManifest()
+	if err != nil {
+		return err
+	}
+
+	delete(manifest.Actions, name)
+	return u.SaveManifest(manifest)
 }

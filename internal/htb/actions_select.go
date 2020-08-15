@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/fatih/color"
 	"github.com/kathleenfrench/common/gui"
 	"github.com/kathleenfrench/sneak/internal/entity"
 )
@@ -33,7 +34,6 @@ func (ag *ActionsGUI) SelectActionFromDropdown(actions map[string]*entity.Action
 // SelectIndividualActionsActionsDropdown lists available actions for interacting/configuring/modifying sneak actions defined in the pipeline manifest
 func (ag *ActionsGUI) SelectIndividualActionsActionsDropdown(a *entity.Action) error {
 	actionChoice := gui.SelectPromptWithResponse("select from dropdown", singleActionOpts, nil, true)
-
 	switch actionChoice {
 	case editDescription:
 		a.Description = gui.InputPromptWithResponse("provide a new description", a.Description, true)
@@ -44,6 +44,7 @@ func (ag *ActionsGUI) SelectIndividualActionsActionsDropdown(a *entity.Action) e
 
 		return ag.SelectIndividualActionsActionsDropdown(a)
 	case viewRunner:
+		color.Red("TODO")
 	case removeAction:
 		var err error
 		confirmRemoval := gui.ConfirmPrompt(fmt.Sprintf("are you sure you want to remove the action %s?", a.Name), "", false, true)

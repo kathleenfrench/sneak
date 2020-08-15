@@ -17,6 +17,8 @@ type Usecase interface {
 	ManifestExists() (bool, error)
 	NewManifest() error
 	SavePipeline(p *entity.Pipeline) error
+	GetManifest() (*entity.PipelinesManifest, error)
+	SaveManifest(m *entity.PipelinesManifest) error
 }
 
 type pipelineUsecase struct {
@@ -82,4 +84,17 @@ func (u *pipelineUsecase) GetByName(name string) (*entity.Pipeline, error) {
 
 func (u *pipelineUsecase) RemovePipeline(name string) error {
 	return u.Repository.RemovePipeline(name)
+}
+
+func (u *pipelineUsecase) GetManifest() (*entity.PipelinesManifest, error) {
+	manifest, err := u.Repository.ParseManifest()
+	if err != nil {
+		return nil, err
+	}
+
+	return manifest, nil
+}
+
+func (u *pipelineUsecase) SaveManifest(m *entity.PipelinesManifest) error {
+	return u.Repository.SaveManifest(m)
 }
