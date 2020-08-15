@@ -28,7 +28,6 @@ func NewRunnerGUI(au action.Usecase) *RunnerGUI {
 const (
 	editCommand    = "change command(s) to run"
 	editScriptPath = "change script path"
-	editOutputPath = "change output path"
 	returnToAction = "return to action"
 )
 
@@ -40,6 +39,7 @@ const (
 	outputConfig      = "do you want to set a custom output path for the script logs or keep the deefault?"
 	addOutputPath     = "set a custom filepath"
 	keepOutputDefault = "save action logs to the default filepath in the context of a box"
+	dontSaveLogs      = "disable writing logs to file for this action"
 )
 
 var singleRunnerAddOpts = []string{
@@ -54,26 +54,27 @@ var commandChoiceOpts = []string{
 
 var outputChoiceOpts = []string{
 	keepOutputDefault,
-	addOutputPath,
+	dontSaveLogs,
 }
 
 var singleRunnerOpts = []string{
 	editCommand,
 	editScriptPath,
-	editOutputPath,
+	dontSaveLogs,
 	returnToAction,
 	quit,
 }
+
+const disabled = "DISABLED"
 
 var newRunnerOutputPathMsg = color.YellowString(`
 [OUTPUT PATHS]: 
 
 by default, sneak saves the output/logs for a runner in the notes/[box_name]
-directory. if you would prefer to define a custom path for logs on this
-action, you will need to provide one.
+directory. you can, however, disable this functionality.
 `)
 
-var newRunnerDirections = color.RedString(`
+var newRunnerDirections = color.YellowString(`
 [IMPORTANT]: when adding a new command or script to sneak, 
 you must denote expected values in the following way:
 
@@ -107,8 +108,8 @@ func (rg *RunnerGUI) AddNewRunner() (*entity.Runner, error) {
 	outputConfigChoice := gui.SelectPromptWithResponse(outputConfig, outputChoiceOpts, keepOutputDefault, true)
 	fmt.Println(newRunnerOutputPathMsg)
 	switch outputConfigChoice {
-	case addOutputPath:
-		newRunner.OutputPath = gui.InputPromptWithResponse("provide a custom output path", "", true)
+	case dontSaveLogs:
+		newRunner.DontSaveLogs = true
 	case keepOutputDefault:
 		break
 	}
@@ -126,8 +127,8 @@ func (rg *RunnerGUI) HandleRunnerDropdown(action *entity.Action) error {
 		action.Runner.Command = fmt.Sprintf("|\n%s", action.Runner.Command)
 	case editScriptPath:
 		action.Runner.ScriptPath = gui.InputPromptWithResponse("provide a path to the script", action.Runner.ScriptPath, true)
-	case editOutputPath:
-		action.Runner.OutputPath = gui.InputPromptWithResponse("provide a custom output path", action.Runner.OutputPath, true)
+	case dontSaveLogs:
+		action.Runner.DontSaveLogs = true
 	case returnToAction:
 		return rg.SelectIndividualActionsActionsDropdown(action)
 	case quit:

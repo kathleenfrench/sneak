@@ -12,9 +12,9 @@ import (
 // printRunnerTable outputs a table with information about a given runner
 func printRunnerTable(runner *entity.Runner) {
 	var (
-		scriptPath string
-		outputPath string
-		commandVal string
+		scriptPath      string
+		logsaveDisabled string
+		commandVal      string
 	)
 
 	switch runner.Command {
@@ -24,11 +24,11 @@ func printRunnerTable(runner *entity.Runner) {
 		commandVal = strings.TrimPrefix(runner.Command, "|")
 	}
 
-	switch runner.OutputPath {
-	case "":
-		outputPath = "uses box default"
+	switch runner.DontSaveLogs {
+	case true:
+		logsaveDisabled = "disabled"
 	default:
-		outputPath = runner.OutputPath
+		logsaveDisabled = "enabled"
 	}
 
 	switch runner.ScriptPath {
@@ -41,7 +41,7 @@ func printRunnerTable(runner *entity.Runner) {
 	data := []table.Row{
 		{"command", commandVal},
 		{"script path", scriptPath},
-		{"output path", outputPath},
+		{"save log output", logsaveDisabled},
 	}
 
 	utils.Spacer()
