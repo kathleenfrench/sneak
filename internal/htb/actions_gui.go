@@ -33,17 +33,22 @@ var actionDropdownOpts = []string{
 }
 
 // HandleActionsDropdown handles the initial dropdown for the actions GUI when selecting next steps for how to interact with one's defined (or undefined) actions
-func (ag *ActionsGUI) HandleActionsDropdown(actions map[string]*entity.Action) error {
+func (ag *ActionsGUI) HandleActionsDropdown() error {
 	actionSelect := gui.SelectPromptWithResponse("select from dropdown", actionDropdownOpts, nil, true)
 
 	switch actionSelect {
 	case viewAllActions:
-		if actions == nil {
-			gui.Warn("you do not have any actions defined yet", nil)
-			return ag.HandleActionsDropdown(actions)
+		all, err := ag.usecase.GetAll()
+		if err != nil {
+			gui.ExitWithError(err)
 		}
 
-		selected := ag.SelectActionFromDropdown(actions)
+		if all == nil {
+			gui.Warn("you do not have any actions defined yet", nil)
+			return ag.HandleActionsDropdown()
+		}
+
+		selected := ag.SelectActionFromDropdown(all)
 		return ag.SelectIndividualActionsActionsDropdown(selected)
 	case addNewAction:
 		newAction := &entity.Action{
@@ -58,12 +63,7 @@ func (ag *ActionsGUI) HandleActionsDropdown(actions map[string]*entity.Action) e
 			return err
 		}
 
-		updatedActions, err := ag.usecase.GetAll()
-		if err != nil {
-			return err
-		}
-
-		return ag.HandleActionsDropdown(updatedActions)
+		return ag.HandleActionsDropdown()
 	case quit:
 		os.Exit(0)
 	}

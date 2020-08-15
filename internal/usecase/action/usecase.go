@@ -44,10 +44,6 @@ func (u *actionUsecase) GetAll() (map[string]*entity.Action, error) {
 		return nil, err
 	}
 
-	if manifest.Actions == nil {
-		manifest.Actions = make(map[string]*entity.Action)
-	}
-
 	return manifest.Actions, nil
 }
 

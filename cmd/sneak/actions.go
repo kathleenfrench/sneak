@@ -41,12 +41,7 @@ var pipelineManifestActionsCmd = &cobra.Command{
 		}
 	},
 	Run: func(cmd *cobra.Command, args []string) {
-		all, err := actionUsecase.GetAll()
-		if err != nil {
-			gui.ExitWithError(err)
-		}
-
-		err = actionGUI.HandleActionsDropdown(all)
+		err := actionGUI.HandleActionsDropdown()
 		if err != nil {
 			gui.ExitWithError(err)
 		}
