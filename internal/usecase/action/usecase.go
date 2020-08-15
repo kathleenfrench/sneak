@@ -25,7 +25,17 @@ func NewActionUsecase(u pipeline.Usecase) Usecase {
 }
 
 func (u *actionUsecase) SaveAction(action *entity.Action) error {
-	return nil
+	manifest, err := u.GetManifest()
+	if err != nil {
+		return err
+	}
+
+	if manifest.Actions == nil {
+		manifest.Actions = make(map[string]*entity.Action)
+	}
+
+	manifest.Actions[action.Name] = action
+	return u.SaveManifest(manifest)
 }
 
 func (u *actionUsecase) GetAll() (map[string]*entity.Action, error) {

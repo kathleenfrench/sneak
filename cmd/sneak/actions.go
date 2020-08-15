@@ -3,7 +3,6 @@ package sneak
 import (
 	"fmt"
 
-	"github.com/fatih/color"
 	"github.com/kathleenfrench/common/gui"
 	"github.com/kathleenfrench/sneak/internal/htb"
 	pRepo "github.com/kathleenfrench/sneak/internal/repository/pipeline"
@@ -15,6 +14,7 @@ import (
 
 var (
 	actionUsecase action.Usecase
+	actionGUI     *htb.ActionsGUI
 )
 
 var pipelineManifestActionsCmd = &cobra.Command{
@@ -25,8 +25,8 @@ var pipelineManifestActionsCmd = &cobra.Command{
 		manifestPath := fmt.Sprintf("%s/manifest.yaml", viper.GetString("cfg_dir"))
 		pipelineRepository = pRepo.NewPipelineRepository(manifestPath)
 		pipelineUsecase = pipeline.NewPipelineUsecase(pipelineRepository)
-		pipelineGUI = htb.NewPipelineGUI(pipelineUsecase)
 		actionUsecase = action.NewActionUsecase(pipelineUsecase)
+		actionGUI = htb.NewActionsGUI(actionUsecase)
 		manifestExists, err := pipelineUsecase.ManifestExists()
 		switch {
 		case err != nil:
@@ -41,6 +41,14 @@ var pipelineManifestActionsCmd = &cobra.Command{
 		}
 	},
 	Run: func(cmd *cobra.Command, args []string) {
-		color.Red("todo")
+		all, err := actionUsecase.GetAll()
+		if err != nil {
+			gui.ExitWithError(err)
+		}
+
+		err = actionGUI.HandleActionsDropdown(all)
+		if err != nil {
+			gui.ExitWithError(err)
+		}
 	},
 }
