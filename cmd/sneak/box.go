@@ -63,7 +63,7 @@ var listBoxesCmd = &cobra.Command{
 		}
 
 		if len(boxes) == 0 {
-			gui.Warn("you don't have any boxes yet! run `sneak box add` to get started", nil)
+			gui.Warn("you don't have any boxes yet! run `sneak box new` to get started", nil)
 			return
 		}
 

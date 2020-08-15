@@ -75,9 +75,11 @@ func (jg *JobsGUI) SelectJobActionDropdown(job *entity.Job) error {
 			return err
 		}
 
-		jg.SelectJobActionDropdown(jg.SelectJobFromDropdown(jg.pipeline.Jobs))
+		newJob := jg.SelectJobFromDropdown(jg.pipeline.Jobs)
+		return jg.SelectJobActionDropdown(newJob)
 	case returnToOtherJobs:
-		return jg.SelectJobActionDropdown(jg.SelectJobFromDropdown(jg.pipeline.Jobs))
+		newJob := jg.SelectJobFromDropdown(jg.pipeline.Jobs)
+		return jg.SelectJobActionDropdown(newJob)
 	case quit:
 		os.Exit(0)
 	}
