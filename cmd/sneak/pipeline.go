@@ -16,14 +16,14 @@ import (
 var (
 	pipelineUsecase    pipeline.Usecase
 	pipelineRepository repository.PipelineRepository
-	pipelineGUI        *htb.PipelineGUI
+	pipelineGUI        htb.PipelineGUI
 )
 
 var pipelineCmd = &cobra.Command{
 	Use:     "pipeline",
 	Aliases: []string{"p", "pip", "pipe", "pipelines", "ps"},
 	Short:   "pipelines are a collection of actions defined by the user for running various workflows",
-	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		manifestPath := fmt.Sprintf("%s/manifest.yaml", viper.GetString("cfg_dir"))
 		pipelineRepository = pRepo.NewPipelineRepository(manifestPath)
 		pipelineUsecase = pipeline.NewPipelineUsecase(pipelineRepository)
@@ -31,17 +31,15 @@ var pipelineCmd = &cobra.Command{
 		manifestExists, err := pipelineUsecase.ManifestExists()
 		switch {
 		case err != nil:
-			return err
+			gui.ExitWithError(err)
 		case manifestExists:
-			return err
+			return
 		default:
 			err = pipelineUsecase.NewManifest()
 			if err != nil {
-				return err
+				gui.ExitWithError(err)
 			}
 		}
-
-		return nil
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 		cmd.Usage()
@@ -108,9 +106,19 @@ var pipelineManifestWordlistsCmd = &cobra.Command{
 	},
 }
 
+var pipelineManifestToolsCmd = &cobra.Command{
+	Use:     "tools",
+	Aliases: []string{"tool", "t"},
+	Short:   "define external tools/programs to use and/or fetch",
+	Run: func(cmd *cobra.Command, args []string) {
+		color.Red("todo")
+	},
+}
+
 func init() {
 	pipelineCmd.AddCommand(pipelineNewCmd)
 	pipelineCmd.AddCommand(pipelineListCmd)
 	pipelineCmd.AddCommand(pipelineManifestActionsCmd)
 	pipelineCmd.AddCommand(pipelineManifestWordlistsCmd)
+	pipelineCmd.AddCommand(pipelineManifestToolsCmd)
 }

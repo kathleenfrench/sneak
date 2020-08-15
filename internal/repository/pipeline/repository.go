@@ -32,6 +32,10 @@ func (r *pipelineRepository) SavePipeline(p *entity.Pipeline) error {
 		return err
 	}
 
+	if len(manifest.Pipelines) == 0 {
+		manifest.Pipelines = make(map[string]*entity.Pipeline)
+	}
+
 	if manifest.Pipelines[p.Name] != nil {
 		manifest.Pipelines[p.Name] = p
 	} else {
@@ -73,9 +77,14 @@ func (r *pipelineRepository) ManifestExists() (bool, error) {
 
 func (r *pipelineRepository) read() (*entity.PipelinesManifest, error) {
 	// create file if it does not exist
-	err := r.file.Touch(r.manifestPath)
-	if err != nil {
-		return nil, fmt.Errorf("could not create a pipeline file at %s - %w", r.manifestPath, err)
+	exists, err := r.file.FileExists(r.manifestPath)
+	if !exists {
+		err = r.file.Touch(r.manifestPath)
+		if err != nil {
+			return nil, fmt.Errorf("could not create a pipeline file at %s - %w", r.manifestPath, err)
+		}
+	} else if err != nil {
+		return nil, err
 	}
 
 	manifest := &entity.PipelinesManifest{}

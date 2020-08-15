@@ -24,11 +24,18 @@ var pipelineActions = []string{
 }
 
 // SelectPipelineActionsDropdown lists available actions for interacting/configuring an individual pipeline
-func (pg *PipelineGUI) SelectPipelineActionsDropdown(pipeline *entity.Pipeline, pipelines entity.Pipelines) error {
+func (pg *pipelineGUI) SelectPipelineActionsDropdown(pipeline *entity.Pipeline, pipelines entity.Pipelines) error {
 	selection := gui.SelectPromptWithResponse("select from dropdown", pipelineActions, nil, true)
 
 	switch selection {
 	case jobs:
+		if pipeline.Jobs == nil {
+			pipeline.Jobs = make(map[string]*entity.Job)
+		}
+
+		pg.jobsGUI.pipeline = pipeline
+		pg.jobsGUI.pipelines = pipelines
+		return pg.jobsGUI.HandleJobsDropdown(pipeline.Jobs)
 	case actions:
 	case wordlists:
 	case editDescription:
@@ -54,7 +61,7 @@ func (pg *PipelineGUI) SelectPipelineActionsDropdown(pipeline *entity.Pipeline, 
 }
 
 // SelectPipelineFromDropdown lists a collection of pipelines to choose from in a terminal dropdown
-func (pg *PipelineGUI) SelectPipelineFromDropdown(pipelines entity.Pipelines) *entity.Pipeline {
+func (pg *pipelineGUI) SelectPipelineFromDropdown(pipelines entity.Pipelines) *entity.Pipeline {
 	pipelineNames := getPipelineMapKeys(pipelines)
 	selection := gui.SelectPromptWithResponse("select a pipeline", pipelineNames, nil, false)
 	selected := pipelines[selection]
