@@ -1,18 +1,18 @@
 package htb
 
 import (
-	boxusecase "github.com/kathleenfrench/sneak/internal/usecase/box"
+	"github.com/kathleenfrench/sneak/internal/usecase/box"
 )
 
 // BoxGUI is a struct for managing the box GUI
 type BoxGUI struct {
 	singleBoxTableShown bool
 	activeBox           string
-	usecase             boxusecase.Usecase
+	usecase             box.Usecase
 }
 
-// NewBoxGUI instantiates a new box gui interface
-func NewBoxGUI(use boxusecase.Usecase) *BoxGUI {
+// NewBoxGUI instantiates a new box gui struct
+func NewBoxGUI(use box.Usecase) *BoxGUI {
 	return &BoxGUI{
 		singleBoxTableShown: false,
 		activeBox:           "",

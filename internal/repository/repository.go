@@ -18,4 +18,9 @@ type BoxRepository interface {
 
 // PipelineRepository manages methods for working with pipeliens
 type PipelineRepository interface {
+	ParseManifest() (*entity.PipelinesManifest, error)
+	RemovePipeline(name string) error
+	SavePipeline(p *entity.Pipeline) error
+	SaveManifest(m *entity.PipelinesManifest) error
+	ManifestExists() (bool, error)
 }
