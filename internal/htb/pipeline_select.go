@@ -27,6 +27,10 @@ var pipelineActions = []string{
 func (pg *pipelineGUI) SelectPipelineActionsDropdown(pipeline *entity.Pipeline, pipelines entity.Pipelines) error {
 	selection := gui.SelectPromptWithResponse("select from dropdown", pipelineActions, nil, true)
 
+	if pipeline.Jobs == nil {
+		pipeline.Jobs = make(map[string]*entity.Job)
+	}
+
 	switch selection {
 	case jobs:
 		if pipeline.Jobs == nil {

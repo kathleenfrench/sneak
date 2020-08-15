@@ -1,6 +1,7 @@
 package htb
 
 import (
+	"github.com/fatih/color"
 	"github.com/kathleenfrench/common/gui"
 	"github.com/kathleenfrench/sneak/internal/entity"
 )
@@ -18,12 +19,13 @@ const (
 )
 
 // SelectJobActionDropdown lists available actions for interacting/configuring an individual job
-func (pg *pipelineGUI) SelectJobActionDropdown(job *entity.Job, pipeline *entity.Pipeline, pipelines entity.Pipelines) error {
+func (pg *JobsGUI) SelectJobActionDropdown(job *entity.Job) error {
+	color.Green("SELECT JOB ACTIONS")
 	return nil
 }
 
 // SelectJobFromDropdown lists a collection of jobs defined within a single pipeline where a job represents a single operation/script/task
-func (pg *pipelineGUI) SelectJobFromDropdown(jobs map[string]*entity.Job) *entity.Job {
+func (pg *JobsGUI) SelectJobFromDropdown(jobs map[string]*entity.Job) *entity.Job {
 	jobsNames := getJobKeys(jobs)
 	selection := gui.SelectPromptWithResponse("select a job", jobsNames, nil, false)
 	selected := jobs[selection]
