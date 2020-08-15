@@ -8,7 +8,7 @@ import (
 	"github.com/kathleenfrench/sneak/pkg/utils"
 )
 
-// PrintBoxDataTable poutputs box data in a readable table in the terminal window
+// PrintBoxDataTable outputs box data in a readable table in the terminal window
 func PrintBoxDataTable(box entity.Box) {
 	data := []table.Row{
 		{"name", box.Name},

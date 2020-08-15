@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/fatih/color"
 	"github.com/kathleenfrench/common/gui"
 	"github.com/kathleenfrench/sneak/internal/entity"
 )
@@ -21,6 +20,11 @@ var singleActionOpts = []string{
 	removeAction,
 	returnToOtherActions,
 	quit,
+}
+
+// ActionsGUIHandlers is an interface that exposes methods for navigating the actions GUI
+type ActionsGUIHandlers interface {
+	SelectIndividualActionsActionsDropdown(a *entity.Action) error
 }
 
 // SelectActionFromDropdown lists a collection of defined actions and offers a host of options for how to interact with them
@@ -44,7 +48,12 @@ func (ag *ActionsGUI) SelectIndividualActionsActionsDropdown(a *entity.Action) e
 
 		return ag.SelectIndividualActionsActionsDropdown(a)
 	case viewRunner:
-		color.Red("TODO")
+		if a.Runner == nil {
+			gui.Warn("no runner defined yet", a.Name)
+			return ag.SelectIndividualActionsActionsDropdown(a)
+		}
+		printRunnerTable(a.Runner)
+		return ag.runner.HandleRunnerDropdown(a)
 	case removeAction:
 		var err error
 		confirmRemoval := gui.ConfirmPrompt(fmt.Sprintf("are you sure you want to remove the action %s?", a.Name), "", false, true)

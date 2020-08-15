@@ -12,12 +12,14 @@ import (
 type ActionsGUI struct {
 	usecase action.Usecase
 	PipelineGUI
+	runner *RunnerGUI
 }
 
 // NewActionsGUI instantiates a new ActionsGUI struct
 func NewActionsGUI(u action.Usecase) *ActionsGUI {
 	return &ActionsGUI{
 		usecase: u,
+		runner:  NewRunnerGUI(u),
 	}
 }
 
@@ -56,9 +58,14 @@ func (ag *ActionsGUI) HandleActionsDropdown() error {
 			Description: gui.InputPromptWithResponse("describe what this action does", "", true),
 		}
 
-		// TODO: ADD RUNNER
+		newRunner, err := ag.runner.AddNewRunner()
+		if err != nil {
+			return err
+		}
 
-		err := ag.usecase.SaveAction(newAction)
+		newAction.Runner = newRunner
+
+		err = ag.usecase.SaveAction(newAction)
 		if err != nil {
 			return err
 		}
