@@ -1,7 +1,9 @@
 package htb
 
 import (
-	"github.com/fatih/color"
+	"fmt"
+	"os"
+
 	"github.com/kathleenfrench/common/gui"
 	"github.com/kathleenfrench/sneak/internal/entity"
 )
@@ -18,14 +20,73 @@ const (
 	removeJob         = "remove this job from the pipeline"
 )
 
+var singleJobActionsDropdown = []string{
+	editDescription,
+	disableJob,
+	removeJob,
+	returnToOtherJobs,
+	quit,
+}
+
 // SelectJobActionDropdown lists available actions for interacting/configuring an individual job
-func (pg *JobsGUI) SelectJobActionDropdown(job *entity.Job) error {
-	color.Green("SELECT JOB ACTIONS")
+func (jg *JobsGUI) SelectJobActionDropdown(job *entity.Job) error {
+	jobAction := gui.SelectPromptWithResponse("select from dropdown", singleJobActionsDropdown, nil, true)
+
+	switch jobAction {
+	case editDescription:
+		job.Description = gui.InputPromptWithResponse("provide a new description", job.Description, true)
+		err := jg.usecase.SaveJob(job, jg.pipeline.Name)
+		if err != nil {
+			return err
+		}
+
+		return jg.SelectJobActionDropdown(job)
+	case disableJob:
+		var enabledStatus bool
+		switch job.Disabled {
+		case true:
+			enabledStatus = gui.ConfirmPrompt(fmt.Sprintf("%s is currently disabled, re-enable it?", job.Name), "", true, true)
+		default:
+			enabledStatus = gui.ConfirmPrompt(fmt.Sprintf("%s is currently enabled, disable it?", job.Name), "", true, true)
+		}
+
+		job.Disabled = enabledStatus
+		err := jg.usecase.SaveJob(job, jg.pipeline.Name)
+		if err != nil {
+			return err
+		}
+
+		return jg.SelectJobActionDropdown(job)
+	case removeJob:
+		var err error
+		confirmRemoval := gui.ConfirmPrompt(fmt.Sprintf("are you sure you want to remove %s from the %s pipeline?", job.Name, jg.pipeline.Name), "", false, true)
+		switch confirmRemoval {
+		case true:
+			err = jg.usecase.RemoveJob(job.Name, jg.pipeline.Name)
+			if err != nil {
+				return err
+			}
+		default:
+			break
+		}
+
+		jg.pipeline.Jobs, err = jg.usecase.GetPipelineJobs(jg.pipeline.Name)
+		if err != nil {
+			return err
+		}
+
+		jg.SelectJobActionDropdown(jg.SelectJobFromDropdown(jg.pipeline.Jobs))
+	case returnToOtherJobs:
+		return jg.SelectJobActionDropdown(jg.SelectJobFromDropdown(jg.pipeline.Jobs))
+	case quit:
+		os.Exit(0)
+	}
+
 	return nil
 }
 
 // SelectJobFromDropdown lists a collection of jobs defined within a single pipeline where a job represents a single operation/script/task
-func (pg *JobsGUI) SelectJobFromDropdown(jobs map[string]*entity.Job) *entity.Job {
+func (jg *JobsGUI) SelectJobFromDropdown(jobs map[string]*entity.Job) *entity.Job {
 	jobsNames := getJobKeys(jobs)
 	selection := gui.SelectPromptWithResponse("select a job", jobsNames, nil, false)
 	selected := jobs[selection]

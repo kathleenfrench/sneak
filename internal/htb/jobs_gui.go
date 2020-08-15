@@ -25,9 +25,16 @@ func NewJobsGUI(u pipeline.Usecase) *JobsGUI {
 	}
 }
 
+var jobsDropdownOpts = []string{
+	viewAllJobs,
+	addNewJob,
+	returnToPipeline,
+	quit,
+}
+
 // HandleJobsDropdown handles the initial jobs GUI dropdown when selectd within a single pipeline
 func (jg *JobsGUI) HandleJobsDropdown(jobs map[string]*entity.Job) error {
-	jobAction := gui.SelectPromptWithResponse("select from dropdown", []string{viewAllJobs, addNewJob, returnToPipeline, quit}, nil, true)
+	jobAction := gui.SelectPromptWithResponse("select from dropdown", jobsDropdownOpts, nil, true)
 
 	switch jobAction {
 	case viewAllJobs:

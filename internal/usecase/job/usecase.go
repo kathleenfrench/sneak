@@ -10,7 +10,7 @@ import (
 // Usecase is an interface for methods controlling jobs in pipelines
 type Usecase interface {
 	SaveJob(job *entity.Job, pipelineName string) error
-	RemoveJob(jobName string) error
+	RemoveJob(jobName string, pipelineName string) error
 	GetPipelineJobs(pipelineName string) (map[string]*entity.Job, error)
 }
 
@@ -28,22 +28,16 @@ func NewJobUsecase(u pipeline.Usecase) Usecase {
 }
 
 func (u *jobUsecase) SaveJob(job *entity.Job, pipelineName string) error {
-	color.Green("pipeline name: %s", pipelineName)
 	pipeline, err := u.GetByName(pipelineName)
 	if err != nil {
 		return err
 	}
-	color.Green("pipeline: %v", pipeline)
 
 	if pipeline.Jobs == nil {
 		pipeline.Jobs = make(map[string]*entity.Job)
 	}
 
-	pipeline.Jobs[job.Name] = &entity.Job{}
 	pipeline.Jobs[job.Name] = job
-
-	color.Green("pipeline jobs: %v", pipeline.Jobs)
-
 	err = u.SavePipeline(pipeline)
 	if err != nil {
 		return err
@@ -52,7 +46,19 @@ func (u *jobUsecase) SaveJob(job *entity.Job, pipelineName string) error {
 	return nil
 }
 
-func (u *jobUsecase) RemoveJob(jobName string) error {
+func (u *jobUsecase) RemoveJob(jobName string, pipelineName string) error {
+	color.Yellow("removing %s from %s...", jobName, pipelineName)
+	p, err := u.GetByName(pipelineName)
+	if err != nil {
+		return err
+	}
+
+	delete(p.Jobs, jobName)
+	err = u.SavePipeline(p)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 

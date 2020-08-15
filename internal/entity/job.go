@@ -6,4 +6,5 @@ type Job struct {
 	Description string             `yaml:"description,omitempty"`
 	OneOffs     map[string]*Runner `yaml:"oneoffs,omitempty"`
 	Actions     []string           `yaml:"actions,omitempty"` // where string = action name
+	Disabled    bool               `yaml:"disabled,omitempty"`
 }
