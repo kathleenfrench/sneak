@@ -88,15 +88,6 @@ var pipelineListCmd = &cobra.Command{
 	},
 }
 
-var pipelineManifestActionsCmd = &cobra.Command{
-	Use:     "actions",
-	Aliases: []string{"action", "act"},
-	Short:   "define common actions for re-use between multiple pipelines in your pipeline manifest",
-	Run: func(cmd *cobra.Command, args []string) {
-		color.Red("todo")
-	},
-}
-
 var pipelineManifestWordlistsCmd = &cobra.Command{
 	Use:     "wordlists",
 	Aliases: []string{"word", "w", "wl", "wordlist"},
@@ -118,7 +109,6 @@ var pipelineManifestToolsCmd = &cobra.Command{
 func init() {
 	pipelineCmd.AddCommand(pipelineNewCmd)
 	pipelineCmd.AddCommand(pipelineListCmd)
-	pipelineCmd.AddCommand(pipelineManifestActionsCmd)
 	pipelineCmd.AddCommand(pipelineManifestWordlistsCmd)
 	pipelineCmd.AddCommand(pipelineManifestToolsCmd)
 }

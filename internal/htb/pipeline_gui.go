@@ -14,9 +14,8 @@ type PipelineGUI interface {
 
 // PipelineGUI manages methods and properties of the terminal GUI re: pipelines
 type pipelineGUI struct {
-	usecase    pipeline.Usecase
-	jobsGUI    *JobsGUI
-	actionsGUI *ActionsGUI
+	usecase pipeline.Usecase
+	jobsGUI *JobsGUI
 }
 
 // NewPipelineGUI instantiates a new pipeline gui struct

@@ -8,7 +8,7 @@ import (
 // Usecase is an interface for methods controlling actions in pipelines
 type Usecase interface {
 	SaveAction(action *entity.Action) error
-	GetAll() ([]*entity.Action, error)
+	GetAll() (map[string]*entity.Action, error)
 	GetByName(name string) (*entity.Action, error)
 	RemoveAction(name string) error
 }
@@ -26,7 +26,7 @@ func (u *actionUsecase) SaveAction(action *entity.Action) error {
 	return nil
 }
 
-func (u *actionUsecase) GetAll() ([]*entity.Action, error) {
+func (u *actionUsecase) GetAll() (map[string]*entity.Action, error) {
 	return nil, nil
 }
 
