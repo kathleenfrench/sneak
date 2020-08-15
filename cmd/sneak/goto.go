@@ -1,6 +1,8 @@
 package sneak
 
 import (
+	"fmt"
+
 	"github.com/kathleenfrench/common/exec"
 	"github.com/kathleenfrench/common/gui"
 	"github.com/kathleenfrench/sneak/pkg/utils"
@@ -15,11 +17,10 @@ var gotoCmd = &cobra.Command{
 		shortcutKeys := utils.GetKeysFromMap(sneakCfg.WebShortcuts)
 		switch len(args) {
 		case 0:
-			// dropdown
 			choice := gui.SelectPromptWithResponse("select a shortcut", shortcutKeys, nil, true)
 			err := exec.OpenURL(sneakCfg.WebShortcuts[choice])
 			if err != nil {
-				gui.ExitWithError(err)
+				gui.ExitWithError(fmt.Errorf("could not open %s - if you are running sneak in docker, this subcommand will not work - %w", sneakCfg.WebShortcuts[choice], err))
 			}
 
 			return

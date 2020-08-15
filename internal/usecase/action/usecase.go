@@ -27,7 +27,7 @@ func (u *actionUsecase) SaveAction(action *entity.Action) error {
 }
 
 func (u *actionUsecase) GetAll() ([]*entity.Action, error) {
-	return nil
+	return nil, nil
 }
 
 func (u *actionUsecase) GetByName(name string) (*entity.Action, error) {
