@@ -13,6 +13,7 @@ type Usecase interface {
 	GetAll() (map[string]*entity.Action, error)
 	GetByName(name string) (*entity.Action, error)
 	RemoveAction(name string) error
+	GetJobActions(names []string) (map[string]*entity.Action, error)
 }
 
 type actionUsecase struct {
@@ -45,6 +46,22 @@ func (u *actionUsecase) GetAll() (map[string]*entity.Action, error) {
 	}
 
 	return manifest.Actions, nil
+}
+
+func (u *actionUsecase) GetJobActions(names []string) (map[string]*entity.Action, error) {
+	jobActions := make(map[string]*entity.Action)
+	manifest, err := u.GetManifest()
+	if err != nil {
+		return nil, err
+	}
+
+	for _, a := range names {
+		if v, ok := manifest.Actions[a]; ok {
+			jobActions[a] = v
+		}
+	}
+
+	return jobActions, nil
 }
 
 func (u *actionUsecase) GetByName(name string) (*entity.Action, error) {

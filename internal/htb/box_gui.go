@@ -37,7 +37,7 @@ var defaultBoxOpts = []string{
 
 // DefaultDropdownHandler is the dropdown GUI for when `sneak box` is run without arguments
 func (bg *BoxGUI) DefaultDropdownHandler() error {
-	choice := gui.SelectPromptWithResponse("select one", defaultBoxOpts, nil, true)
+	choice := gui.SelectPromptWithResponse("select one", defaultBoxOpts, nil, false)
 	switch choice {
 	case listBoxes:
 		boxes, err := bg.usecase.GetAll()

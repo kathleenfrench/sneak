@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/fatih/color"
 	"github.com/kathleenfrench/common/gui"
 	"github.com/kathleenfrench/sneak/internal/entity"
 )
@@ -34,7 +33,6 @@ var singleJobActionsDropdown = []string{
 // SelectJobActionDropdown lists available actions for interacting/configuring an individual job
 func (jg *JobsGUI) SelectJobActionDropdown(job *entity.Job) error {
 	jobAction := gui.SelectPromptWithResponse("select from dropdown", singleJobActionsDropdown, nil, true)
-	printJobTable(job)
 	switch jobAction {
 	case editDescription:
 		job.Description = gui.InputPromptWithResponse("provide a new description", job.Description, true)
@@ -45,8 +43,19 @@ func (jg *JobsGUI) SelectJobActionDropdown(job *entity.Job) error {
 
 		return jg.SelectJobActionDropdown(job)
 	case manageActions:
-		color.Green("MANAGE ACTIONS")
-		return nil
+		if job.Actions == nil {
+			gui.Warn("you do not have any actions defined for this job yet", nil)
+			return jg.SelectJobActionDropdown(job)
+		}
+
+		jobActions, err := jg.actionsUsecase.GetJobActions(job.Actions)
+		if err != nil {
+			return err
+		}
+
+		agui := NewActionsGUI(jg.actionsUsecase)
+		selected := agui.SelectActionFromDropdown(jobActions)
+		return agui.SelectIndividualActionsActionsDropdown(selected)
 	case disableJob:
 		var enabledStatus bool
 		switch job.Disabled {
@@ -95,6 +104,7 @@ func (jg *JobsGUI) SelectJobActionDropdown(job *entity.Job) error {
 
 // SelectJobFromDropdown lists a collection of jobs defined within a single pipeline where a job represents a single operation/script/task
 func (jg *JobsGUI) SelectJobFromDropdown(jobs map[string]*entity.Job) *entity.Job {
+	printJobsTable(jobs)
 	jobsNames := getJobKeys(jobs)
 	selection := gui.SelectPromptWithResponse("select a job", jobsNames, nil, true)
 	selected := jobs[selection]

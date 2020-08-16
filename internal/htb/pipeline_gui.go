@@ -7,6 +7,7 @@ import (
 	"github.com/fatih/color"
 	"github.com/kathleenfrench/common/gui"
 	"github.com/kathleenfrench/sneak/internal/entity"
+	"github.com/kathleenfrench/sneak/internal/usecase/action"
 	"github.com/kathleenfrench/sneak/internal/usecase/pipeline"
 )
 
@@ -31,7 +32,7 @@ type pipelineGUI struct {
 func NewPipelineGUI(u pipeline.Usecase) PipelineGUI {
 	return &pipelineGUI{
 		usecase: u,
-		jobsGUI: NewJobsGUI(u),
+		jobsGUI: NewJobsGUI(u, action.NewActionUsecase(u)),
 	}
 }
 
