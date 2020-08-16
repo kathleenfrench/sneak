@@ -108,5 +108,4 @@ func init() {
 	rootCmd.AddCommand(gotoCmd)
 	rootCmd.AddCommand(vpnCmd)
 	rootCmd.AddCommand(pipelineCmd)
-	rootCmd.AddCommand(pipelineManifestActionsCmd)
 }
