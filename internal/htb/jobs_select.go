@@ -46,6 +46,7 @@ func (jg *JobsGUI) SelectJobActionDropdown(job *entity.Job) error {
 		return jg.SelectJobActionDropdown(job)
 	case manageActions:
 		color.Green("MANAGE ACTIONS")
+		return nil
 	case disableJob:
 		var enabledStatus bool
 		switch job.Disabled {
