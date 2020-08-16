@@ -34,7 +34,7 @@ var singleJobActionsDropdown = []string{
 // SelectJobActionDropdown lists available actions for interacting/configuring an individual job
 func (jg *JobsGUI) SelectJobActionDropdown(job *entity.Job) error {
 	jobAction := gui.SelectPromptWithResponse("select from dropdown", singleJobActionsDropdown, nil, true)
-
+	printJobTable(job)
 	switch jobAction {
 	case editDescription:
 		job.Description = gui.InputPromptWithResponse("provide a new description", job.Description, true)
@@ -96,7 +96,7 @@ func (jg *JobsGUI) SelectJobActionDropdown(job *entity.Job) error {
 // SelectJobFromDropdown lists a collection of jobs defined within a single pipeline where a job represents a single operation/script/task
 func (jg *JobsGUI) SelectJobFromDropdown(jobs map[string]*entity.Job) *entity.Job {
 	jobsNames := getJobKeys(jobs)
-	selection := gui.SelectPromptWithResponse("select a job", jobsNames, nil, false)
+	selection := gui.SelectPromptWithResponse("select a job", jobsNames, nil, true)
 	selected := jobs[selection]
 	return selected
 }
