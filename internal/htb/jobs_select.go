@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/fatih/color"
 	"github.com/kathleenfrench/common/gui"
 	"github.com/kathleenfrench/sneak/internal/entity"
 )
@@ -18,10 +19,12 @@ const (
 	returnToOtherJobs = "return to other jobs"
 	disableJob        = "disable this job in the pipeline"
 	removeJob         = "remove this job from the pipeline"
+	manageActions     = "manage actions"
 )
 
 var singleJobActionsDropdown = []string{
 	editDescription,
+	manageActions,
 	disableJob,
 	removeJob,
 	returnToOtherJobs,
@@ -41,6 +44,8 @@ func (jg *JobsGUI) SelectJobActionDropdown(job *entity.Job) error {
 		}
 
 		return jg.SelectJobActionDropdown(job)
+	case manageActions:
+		color.Green("MANAGE ACTIONS")
 	case disableJob:
 		var enabledStatus bool
 		switch job.Disabled {

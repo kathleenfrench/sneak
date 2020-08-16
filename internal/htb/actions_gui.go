@@ -37,6 +37,7 @@ var actionDropdownOpts = []string{
 // HandleActionsDropdown handles the initial dropdown for the actions GUI when selecting next steps for how to interact with one's defined (or undefined) actions
 func (ag *ActionsGUI) HandleActionsDropdown() error {
 	actionSelect := gui.SelectPromptWithResponse("select from dropdown", actionDropdownOpts, nil, true)
+	ag.runner.action = ag
 
 	switch actionSelect {
 	case viewAllActions:

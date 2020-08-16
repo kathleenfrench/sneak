@@ -14,7 +14,7 @@ import (
 // RunnerGUI handles the terminal GUI for defining runners, e.g. scripts and tools to run for various pentesting operations, in sneak
 type RunnerGUI struct {
 	usecase action.Usecase
-	ActionsGUIHandlers
+	action  *ActionsGUI
 }
 
 // NewRunnerGUI instantiates a new GUI for defining runners
@@ -130,7 +130,7 @@ func (rg *RunnerGUI) HandleRunnerDropdown(action *entity.Action) error {
 	case dontSaveLogs:
 		action.Runner.DontSaveLogs = true
 	case returnToAction:
-		return rg.SelectIndividualActionsActionsDropdown(action)
+		return rg.action.SelectIndividualActionsActionsDropdown(action)
 	case quit:
 		os.Exit(0)
 	}

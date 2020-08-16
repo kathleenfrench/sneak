@@ -11,27 +11,38 @@ import (
 	"github.com/spf13/viper"
 )
 
+// shared
+const (
+	editDescription = "edit description"
+	quit            = "quit"
+)
+
 const (
 	toggleActiveStatus = "toggle active status"
 	checkConnection    = "check connection"
 	openNotes          = "open notes editor"
 	quickViewNotes     = "quickview notes"
-	editDescription    = "edit description"
+	notes              = "notes"
 	flags              = "flags"
 	returnToBoxes      = "return to other boxes"
-	quit               = "quit"
 	seeTable           = "show info table"
+	runPipeline        = "run pipeline"
 )
 
 var boxActions = []string{
 	toggleActiveStatus,
 	checkConnection,
-	openNotes,
-	quickViewNotes,
+	runPipeline,
+	notes,
 	editDescription,
 	flags,
 	returnToBoxes,
 	quit,
+}
+
+var notesActions = []string{
+	openNotes,
+	quickViewNotes,
 }
 
 // SelectBoxActionsDropdown lists available actions with a single box or the ability to return to the 'main menu' of boxes
@@ -52,6 +63,39 @@ func (bg *BoxGUI) SelectBoxActionsDropdown(box entity.Box, boxes []entity.Box) e
 	case seeTable:
 		PrintBoxDataTable(box)
 		return bg.SelectBoxActionsDropdown(box, boxes)
+	case notes:
+		notesNext := gui.SelectPromptWithResponse("select one", notesActions, nil, true)
+		switch notesNext {
+		case openNotes:
+			note, err := checkForNoteFile(box.Name)
+			if err != nil {
+				return err
+			}
+
+			updatedNote := gui.TextEditorInputAndSave(fmt.Sprintf("update your notes on %s in markdown", box.Name), note, viper.GetString("default_editor"))
+
+			err = saveNoteFile(box.Name, updatedNote)
+			if err != nil {
+				return err
+			}
+
+			return bg.SelectBoxActionsDropdown(box, boxes)
+		case quickViewNotes:
+			note, err := checkForNoteFile(box.Name)
+			if err != nil {
+				return err
+			}
+
+			if len(note) == 0 {
+				color.Yellow("you have not started a note for %s yet!", box.Name)
+			} else {
+				fmt.Println(utils.RenderMarkdown(note))
+			}
+
+			return bg.SelectBoxActionsDropdown(box, boxes)
+		}
+	case runPipeline:
+
 	case toggleActiveStatus:
 		switch box.Active {
 		case true:
@@ -91,39 +135,12 @@ func (bg *BoxGUI) SelectBoxActionsDropdown(box entity.Box, boxes []entity.Box) e
 		}
 
 		return bg.SelectBoxActionsDropdown(box, boxes)
-	case quickViewNotes:
-		note, err := checkForNoteFile(box.Name)
-		if err != nil {
-			return err
-		}
-
-		if len(note) == 0 {
-			color.Yellow("you have not started a note for %s yet!", box.Name)
-		} else {
-			fmt.Println(utils.RenderMarkdown(note))
-		}
-
-		return bg.SelectBoxActionsDropdown(box, boxes)
 	case checkConnection:
 		err := utils.SudoPing(box.IP)
 		if err != nil {
 			gui.Warn("uh oh, that box couldn't be reached! verify that the machine is active and your VPN connection is still intact", box.IP)
 		} else {
 			gui.Info("+1", "reachable!", box.IP)
-		}
-
-		return bg.SelectBoxActionsDropdown(box, boxes)
-	case openNotes:
-		note, err := checkForNoteFile(box.Name)
-		if err != nil {
-			return err
-		}
-
-		updatedNote := gui.TextEditorInputAndSave(fmt.Sprintf("update your notes on %s in markdown", box.Name), note, viper.GetString("default_editor"))
-
-		err = saveNoteFile(box.Name, updatedNote)
-		if err != nil {
-			return err
 		}
 
 		return bg.SelectBoxActionsDropdown(box, boxes)
