@@ -30,6 +30,17 @@ var singleJobActionsDropdown = []string{
 	quit,
 }
 
+var (
+	addActionToJob      = "add another action to job"
+	viewExistingActions = "view existing job actions"
+)
+
+var singleJobActionOpts = []string{
+	addActionToJob,
+	viewExistingActions,
+	quit,
+}
+
 // SelectJobActionDropdown lists available actions for interacting/configuring an individual job
 func (jg *JobsGUI) SelectJobActionDropdown(job *entity.Job) error {
 	jobAction := gui.SelectPromptWithResponse("select from dropdown", singleJobActionsDropdown, nil, true)
@@ -43,19 +54,37 @@ func (jg *JobsGUI) SelectJobActionDropdown(job *entity.Job) error {
 
 		return jg.SelectJobActionDropdown(job)
 	case manageActions:
-		if job.Actions == nil {
-			gui.Warn("you do not have any actions defined for this job yet", nil)
-			return jg.SelectJobActionDropdown(job)
-		}
+		choice := gui.SelectPromptWithResponse("select one", singleJobActionOpts, nil, false)
+		switch choice {
+		case addActionToJob:
+			all, err := jg.actionsUsecase.GetAll()
+			if err != nil {
+				return err
+			}
 
-		jobActions, err := jg.actionsUsecase.GetJobActions(job.Actions)
-		if err != nil {
-			return err
-		}
+			toAdd := gui.SelectPromptWithResponse("select an action to add", getActionNames(all), nil, true)
+			job.Actions = append(job.Actions, toAdd)
+			err = jg.usecase.SaveJob(job, jg.pipeline.Name)
+			if err != nil {
+				return err
+			}
+		case viewExistingActions:
+			if job.Actions == nil {
+				gui.Warn("you do not have any actions defined for this job yet", nil)
+				return jg.SelectJobActionDropdown(job)
+			}
 
-		agui := NewActionsGUI(jg.actionsUsecase)
-		selected := agui.SelectActionFromDropdown(jobActions)
-		return agui.SelectIndividualActionsActionsDropdown(selected)
+			jobActions, err := jg.actionsUsecase.GetJobActions(job.Actions)
+			if err != nil {
+				return err
+			}
+
+			agui := NewActionsGUI(jg.actionsUsecase)
+			selected := agui.SelectActionFromDropdown(jobActions)
+			return agui.SelectIndividualActionsActionsDropdown(selected)
+		case quit:
+			os.Exit(0)
+		}
 	case disableJob:
 		var enabledStatus bool
 		switch job.Disabled {
