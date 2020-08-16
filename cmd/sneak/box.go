@@ -1,8 +1,6 @@
 package sneak
 
 import (
-	"fmt"
-
 	"github.com/kathleenfrench/common/gui"
 	"github.com/kathleenfrench/sneak/internal/htb"
 	"github.com/kathleenfrench/sneak/internal/repository"
@@ -41,17 +39,10 @@ var newBoxCmd = &cobra.Command{
 	Short:   "add a new box",
 	Aliases: []string{"add", "a"},
 	Run: func(cmd *cobra.Command, args []string) {
-		box, err := boxGUI.PromptUserForBoxData()
+		err := boxGUI.AddBox()
 		if err != nil {
 			gui.ExitWithError(err)
 		}
-
-		err = boxUsecase.Save(box)
-		if err != nil {
-			gui.ExitWithError(err)
-		}
-
-		gui.Info("+1", fmt.Sprintf("%s was added successfully!", box.Name), fmt.Sprintf("%s", box.IP))
 	},
 }
 
@@ -60,19 +51,8 @@ var listBoxesCmd = &cobra.Command{
 	Short:   "list all of your boxes",
 	Aliases: []string{"ls"},
 	Run: func(cmd *cobra.Command, args []string) {
-		boxes, err := boxUsecase.GetAll()
+		err := boxGUI.ListBoxes()
 		if err != nil {
-			gui.ExitWithError(err)
-		}
-
-		if len(boxes) == 0 {
-			gui.Warn("you don't have any boxes yet! run `sneak box new` to get started", nil)
-			return
-		}
-
-		selection := boxGUI.SelectBoxFromDropdown(boxes)
-
-		if err = boxGUI.SelectBoxActionsDropdown(selection, boxes); err != nil {
 			gui.ExitWithError(err)
 		}
 	},
