@@ -15,6 +15,7 @@ type Manager interface {
 	FilepathExists(path string) (bool, error)
 	IsFile(path string) (bool, error)
 	CopyFile(srcPath string, targetPath string) error
+	AppendToFile(path string, data []byte, ps ...PermissionSetter) error
 	ReadFile(path string) ([]byte, error)
 	// directories
 	DirectoryExists(path string) (bool, error)
@@ -39,6 +40,7 @@ type manager struct {
 	read        func(name string) ([]byte, error)
 	stat        func(name string) (os.FileInfo, error)
 	open        func(name string) (*os.File, error)
+	openFile    func(name string, flag int, mod os.FileMode) (*os.File, error)
 	create      func(name string) (*os.File, error)
 	notExistErr func(err error) bool
 	chmod       func(name string, mod os.FileMode) error
@@ -59,6 +61,7 @@ func NewManager() Manager {
 		read:        ioutil.ReadFile,
 		stat:        os.Stat,
 		open:        os.Open,
+		openFile:    os.OpenFile,
 		create:      os.Create,
 		notExistErr: os.IsNotExist,
 		chmod:       os.Chmod,

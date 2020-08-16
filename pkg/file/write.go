@@ -1,6 +1,9 @@
 package file
 
-import "fmt"
+import (
+	"fmt"
+	"os"
+)
 
 func (m *manager) Write(path string, data []byte, ps ...PermissionSetter) error {
 	// give user read/write by default
@@ -31,6 +34,27 @@ func (m *manager) Write(path string, data []byte, ps ...PermissionSetter) error 
 	}
 
 	err = m.write(path, data, perms.mode)
+	if err != nil {
+		return fmt.Errorf("cannot write to file %s - %w", path, err)
+	}
+
+	return nil
+}
+
+func (m *manager) AppendToFile(path string, data []byte, ps ...PermissionSetter) error {
+	perms := setDefaults(0644)
+	for _, p := range ps {
+		p(&perms)
+	}
+
+	f, err := m.openFile(path, os.O_WRONLY|os.O_APPEND, 0644)
+	if err != nil {
+		return err
+	}
+
+	defer f.Close()
+
+	_, err = f.WriteString(string(data))
 	if err != nil {
 		return fmt.Errorf("cannot write to file %s - %w", path, err)
 	}

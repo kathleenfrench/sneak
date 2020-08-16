@@ -27,12 +27,14 @@ const (
 	returnToBoxes      = "return to other boxes"
 	seeTable           = "show info table"
 	runPipeline        = "run pipeline"
+	runOneoffAction    = "run one-off action"
 )
 
 var boxActions = []string{
 	toggleActiveStatus,
 	checkConnection,
 	runPipeline,
+	runOneoffAction,
 	notes,
 	editDescription,
 	flags,
@@ -48,7 +50,7 @@ var notesActions = []string{
 // SelectBoxActionsDropdown lists available actions with a single box or the ability to return to the 'main menu' of boxes
 func (bg *BoxGUI) SelectBoxActionsDropdown(box entity.Box, boxes []entity.Box) error {
 	if box.Active {
-		bg.activeBox = box.Name
+		bg.activeBox = box
 	}
 
 	if !bg.singleBoxTableShown {
@@ -95,7 +97,24 @@ func (bg *BoxGUI) SelectBoxActionsDropdown(box entity.Box, boxes []entity.Box) e
 			return bg.SelectBoxActionsDropdown(box, boxes)
 		}
 	case runPipeline:
+		empty := entity.Box{}
+		if bg.activeBox == empty {
+			gui.Warn("you must set a box as active before running a pipeline", box.Name)
+			return bg.SelectBoxActionsDropdown(box, boxes)
+		}
 
+		all, err := bg.pipUsecase.GetAll()
+		if err != nil {
+			return err
+		}
+
+		lsNamesMap, names := genPipelineRunnerNameListMap(all)
+		run := gui.SelectPromptWithResponse("select a pipeline to run", names, nil, false)
+		chosen := lsNamesMap[run]
+		toRun := all[chosen]
+		return bg.RunPipeline(toRun)
+	case runOneoffAction:
+		color.Red("TODO")
 	case toggleActiveStatus:
 		switch box.Active {
 		case true:
@@ -104,7 +123,7 @@ func (bg *BoxGUI) SelectBoxActionsDropdown(box entity.Box, boxes []entity.Box) e
 			switch setInactive {
 			case true:
 				box.Active = false
-				bg.activeBox = ""
+				bg.activeBox = box
 			default:
 				return bg.SelectBoxActionsDropdown(box, boxes)
 			}
@@ -114,7 +133,7 @@ func (bg *BoxGUI) SelectBoxActionsDropdown(box entity.Box, boxes []entity.Box) e
 			switch setActive {
 			case true:
 				box.Active = true
-				bg.activeBox = box.Name
+				bg.activeBox = box
 			default:
 				return bg.SelectBoxActionsDropdown(box, boxes)
 			}
@@ -203,4 +222,17 @@ func (bg *BoxGUI) SelectBoxFromDropdown(boxes []entity.Box) entity.Box {
 	selection := gui.SelectPromptWithResponse("select a box", boxNames, nil, false)
 	selected := boxMap[selection]
 	return selected
+}
+
+func genPipelineRunnerNameListMap(pipelines map[string]*entity.Pipeline) (map[string]string, []string) {
+	namesMap := make(map[string]string)
+	names := []string{}
+
+	for n, p := range pipelines {
+		name := fmt.Sprintf("[%s]: %s", color.YellowString(n), p.Description)
+		namesMap[name] = n
+		names = append(names, name)
+	}
+
+	return namesMap, names
 }

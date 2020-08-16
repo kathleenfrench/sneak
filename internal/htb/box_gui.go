@@ -5,22 +5,25 @@ import (
 	"os"
 
 	"github.com/kathleenfrench/common/gui"
+	"github.com/kathleenfrench/sneak/internal/entity"
 	"github.com/kathleenfrench/sneak/internal/usecase/box"
+	"github.com/kathleenfrench/sneak/internal/usecase/pipeline"
 )
 
 // BoxGUI is a struct for managing the box GUI
 type BoxGUI struct {
 	singleBoxTableShown bool
-	activeBox           string
+	activeBox           entity.Box
 	usecase             box.Usecase
+	pipUsecase          pipeline.Usecase
 }
 
 // NewBoxGUI instantiates a new box gui struct
-func NewBoxGUI(use box.Usecase) *BoxGUI {
+func NewBoxGUI(use box.Usecase, puse pipeline.Usecase) *BoxGUI {
 	return &BoxGUI{
 		singleBoxTableShown: false,
-		activeBox:           "",
 		usecase:             use,
+		pipUsecase:          puse,
 	}
 }
 
