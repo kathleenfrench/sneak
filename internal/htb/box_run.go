@@ -108,29 +108,40 @@ func (e *executor) runScriptFile() error {
 
 func (e *executor) runCommand() (err error) {
 	var stdout bytes.Buffer
+
 	args := append([]string{"-c", e.runner.Command, "sh"})
 	cmd := exec.Command("sh", args...)
 	cmd.Env = append(os.Environ(), e.env...)
 	cmd.Stdin = os.Stdin
-	cmd.Stdout = &stdout
+	if e.runner.DontSaveLogs {
+		cmd.Stdout = os.Stdout
+	} else {
+		cmd.Stdout = &stdout
+	}
+
 	cmd.Stderr = os.Stderr
+	gui.Spin.Start()
 	err = cmd.Run()
+	gui.Spin.Stop()
 	if err != nil {
 		return err
 	}
 
-	newDivider := fmt.Sprintf("\n\n## %s\n\n", e.actionName)
-	err = e.fm.AppendToFile(e.outputPath, []byte(newDivider))
-	if err != nil {
-		return err
+	if !e.runner.DontSaveLogs {
+		newDivider := fmt.Sprintf("\n\n## %s\n\n", e.actionName)
+		err = e.fm.AppendToFile(e.outputPath, []byte(newDivider))
+		if err != nil {
+			return err
+		}
+
+		err = e.fm.AppendToFile(e.outputPath, stdout.Bytes())
+		if err != nil {
+			return err
+		}
+
+		fmt.Println(stdout.String())
 	}
 
-	err = e.fm.AppendToFile(e.outputPath, stdout.Bytes())
-	if err != nil {
-		return err
-	}
-
-	fmt.Println(stdout.String())
 	gui.Info(":+1", fmt.Sprintf("logs written to %s", e.outputPath), nil)
 	return nil
 }
