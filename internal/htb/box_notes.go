@@ -6,6 +6,7 @@ import (
 
 	"github.com/kathleenfrench/common/fs"
 	"github.com/kathleenfrench/sneak/internal/config"
+	"github.com/kathleenfrench/sneak/pkg/file"
 )
 
 func saveNoteFile(boxName string, note string) error {
@@ -47,6 +48,12 @@ func checkForNoteFile(boxName string) (string, error) {
 	}
 
 	err = fs.CreateFile(notesFilePath)
+	if err != nil {
+		return "", err
+	}
+
+	fm := file.NewManager()
+	err = fm.AppendToFile(notesFilePath, []byte(fmt.Sprintf("## %s\n\n", boxName)))
 	if err != nil {
 		return "", err
 	}

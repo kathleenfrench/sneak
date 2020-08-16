@@ -69,6 +69,11 @@ func (bg *BoxGUI) RunPipeline(p *entity.Pipeline) error {
 }
 
 func (e *executor) run(actionName string, r *entity.Runner) error {
+	_, err := checkForNoteFile(e.box.Name)
+	if err != nil {
+		return err
+	}
+
 	switch r.ScriptPath {
 	case "":
 		return e.runCommand()
