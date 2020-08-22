@@ -7,6 +7,7 @@ import (
 	"github.com/fatih/color"
 	"github.com/kathleenfrench/common/gui"
 	"github.com/kathleenfrench/sneak/internal/entity"
+	"github.com/kathleenfrench/sneak/internal/usecase/action"
 	"github.com/kathleenfrench/sneak/pkg/utils"
 	"github.com/spf13/viper"
 )
@@ -114,7 +115,15 @@ func (bg *BoxGUI) SelectBoxActionsDropdown(box entity.Box, boxes []entity.Box) e
 		toRun := all[chosen]
 		return bg.RunPipeline(toRun)
 	case runOneoffAction:
-		color.Red("TODO")
+		actionUsecase := action.NewActionUsecase(bg.pipUsecase)
+		allActions, err := actionUsecase.GetAll()
+		if err != nil {
+			return err
+		}
+
+		oneoff := gui.SelectPromptWithResponse("select a one-off action", getActionNames(allActions), nil, false)
+		chosenOneoff := allActions[oneoff]
+		return bg.HandleRunnerAction(chosenOneoff)
 	case toggleActiveStatus:
 		switch box.Active {
 		case true:

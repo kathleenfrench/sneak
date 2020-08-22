@@ -89,6 +89,7 @@ run: dev-docker ## run sneak in a containerized environment
 		--cap-add=NET_ADMIN \
 		-v $(HOME)/.sneak/:/home/$(HTB_USERNAME)/.sneak \
 		-v $(CWD)/build/sneak:/go/bin/sneak \
+		-v $(HOME)/wordlists/:/home/$(HTB_USERNAME)/wordlists \
 		-p 8118:8118 \
 		-it sneaker \
 		 /bin/sh

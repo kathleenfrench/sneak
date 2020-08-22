@@ -6,6 +6,7 @@ import (
 
 	"github.com/kathleenfrench/common/gui"
 	"github.com/kathleenfrench/sneak/internal/entity"
+	"github.com/txn2/txeh"
 )
 
 // PromptUserForBoxData prompts the user for values about the htb machine they want to add
@@ -33,5 +34,11 @@ func (bg *BoxGUI) PromptUserForBoxData() (entity.Box, error) {
 	}
 
 	box.Hostname = fmt.Sprintf("%s.htb", box.Name)
+	hosts, err := txeh.NewHostsDefault()
+	if err != nil {
+		return box, err
+	}
+
+	hosts.AddHost(box.IP, box.Hostname)
 	return box, nil
 }

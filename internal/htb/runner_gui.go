@@ -90,7 +90,7 @@ sneak will handle parsing those values using what you have set
 for that box.
 `)
 
-var defaultScriptText = fmt.Sprintf("#!/bin/bash\n\n")
+var defaultScriptText = fmt.Sprintf("\n#!/bin/bash\n\n")
 
 // AddNewRunner manages collectin information on the addition of a new runner
 func (rg *RunnerGUI) AddNewRunner() (*entity.Runner, error) {
@@ -100,7 +100,7 @@ func (rg *RunnerGUI) AddNewRunner() (*entity.Runner, error) {
 	switch commandConfigChoice {
 	case addCommand:
 		newRunner.Command = gui.TextEditorInputAndSave("write your script, then save and exit", defaultScriptText, viper.GetString("default_editor"))
-		newRunner.Command = fmt.Sprintf("|\n%s", newRunner.Command)
+		// newRunner.Command = fmt.Sprintf("|\n%s", newRunner.Command)
 	case addScriptPath:
 		newRunner.ScriptPath = gui.InputPromptWithResponse("provide a path to the script", "", true)
 	}
@@ -124,7 +124,6 @@ func (rg *RunnerGUI) HandleRunnerDropdown(action *entity.Action) error {
 	switch runnerOpts {
 	case editCommand:
 		action.Runner.Command = gui.TextEditorInputAndSave("write your script, then save and exit", action.Runner.Command, viper.GetString("default_editor"))
-		action.Runner.Command = fmt.Sprintf("|\n%s", action.Runner.Command)
 	case editScriptPath:
 		action.Runner.ScriptPath = gui.InputPromptWithResponse("provide a path to the script", action.Runner.ScriptPath, true)
 	case dontSaveLogs:

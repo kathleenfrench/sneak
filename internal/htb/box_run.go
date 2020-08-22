@@ -68,6 +68,38 @@ func (bg *BoxGUI) RunPipeline(p *entity.Pipeline) error {
 	return nil
 }
 
+// HandleRunnerAction handles running a speciic action
+func (bg *BoxGUI) HandleRunnerAction(a *entity.Action) error {
+	env := []string{
+		fmt.Sprintf("BOX_IP=%s", bg.activeBox.IP),
+		fmt.Sprintf("BOX_NAME=%s", bg.activeBox.Name),
+		fmt.Sprintf("BOX_HOST=%s", bg.activeBox.Hostname),
+	}
+
+	exe := &executor{
+		actionName: a.Name,
+		runner:     a.Runner,
+		fm:         file.NewManager(),
+		box:        bg.activeBox,
+		env:        env,
+		outputPath: fmt.Sprintf("%s/notes/%s/main.md", viper.GetString("cfg_dir"), bg.activeBox.Name),
+	}
+
+	fmt.Println(
+		fmt.Sprintf(
+			"%s%s",
+			color.YellowString("[ACTION]: "),
+			a.Name),
+	)
+
+	err := exe.run(a.Name, a.Runner)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (e *executor) run(actionName string, r *entity.Runner) error {
 	_, err := checkForNoteFile(e.box.Name)
 	if err != nil {
@@ -145,6 +177,7 @@ func (e *executor) runCommand() (err error) {
 		}
 
 		fmt.Println(stdout.String())
+		return nil
 	}
 
 	gui.Info(":+1", fmt.Sprintf("logs written to %s", e.outputPath), nil)

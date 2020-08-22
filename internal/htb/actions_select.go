@@ -12,12 +12,14 @@ const (
 	returnToOtherActions = "return to other actions"
 	removeAction         = "remove this action"
 	viewRunner           = "view runner"
+	disableLogs          = "disable log saving"
 )
 
 var singleActionOpts = []string{
 	editDescription,
 	viewRunner,
 	removeAction,
+	disableLogs,
 	returnToOtherActions,
 	quit,
 }
@@ -54,6 +56,14 @@ func (ag *ActionsGUI) SelectIndividualActionsActionsDropdown(a *entity.Action) e
 		}
 		printRunnerTable(a.Runner)
 		return ag.runner.HandleRunnerDropdown(a)
+	case disableLogs:
+		a.Runner.DontSaveLogs = true
+		err := ag.usecase.SaveAction(a)
+		if err != nil {
+			return err
+		}
+
+		return ag.SelectIndividualActionsActionsDropdown(a)
 	case removeAction:
 		var err error
 		confirmRemoval := gui.ConfirmPrompt(fmt.Sprintf("are you sure you want to remove the action %s?", a.Name), "", false, true)
