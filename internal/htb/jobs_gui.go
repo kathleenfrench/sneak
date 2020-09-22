@@ -3,9 +3,9 @@ package htb
 import (
 	"os"
 
-	"github.com/fatih/color"
 	"github.com/kathleenfrench/common/gui"
 	"github.com/kathleenfrench/sneak/internal/entity"
+	"github.com/kathleenfrench/sneak/internal/usecase/action"
 	"github.com/kathleenfrench/sneak/internal/usecase/job"
 	"github.com/kathleenfrench/sneak/internal/usecase/pipeline"
 )
@@ -16,12 +16,15 @@ type JobsGUI struct {
 	pipeline  *entity.Pipeline
 	pipelines entity.Pipelines
 	PipelineGUI
+	shownListTable bool
+	actionsUsecase action.Usecase
 }
 
 // NewJobsGUI instantiates a new JobsGUI
-func NewJobsGUI(u pipeline.Usecase) *JobsGUI {
+func NewJobsGUI(u pipeline.Usecase, au action.Usecase) *JobsGUI {
 	return &JobsGUI{
-		usecase: job.NewJobUsecase(u),
+		usecase:        job.NewJobUsecase(u),
+		actionsUsecase: au,
 	}
 }
 
@@ -60,8 +63,6 @@ func (jg *JobsGUI) HandleJobsDropdown(jobs map[string]*entity.Job) error {
 		if err != nil {
 			return err
 		}
-
-		color.Yellow("JOBS: %v", jobs)
 
 		return jg.HandleJobsDropdown(jobs)
 	case returnToPipeline:

@@ -1,18 +1,89 @@
 package htb
 
 import (
+	"os"
+
+	"github.com/kathleenfrench/common/gui"
+	"github.com/kathleenfrench/sneak/internal/entity"
 	"github.com/kathleenfrench/sneak/internal/usecase/action"
-	"github.com/kathleenfrench/sneak/internal/usecase/pipeline"
 )
 
-// ActionsGUI manages methods and properties of the terminal GUI re: actions
+// ActionsGUI is an interface for methods to work with actions within pipelines
 type ActionsGUI struct {
 	usecase action.Usecase
+	PipelineGUI
+	runner *RunnerGUI
 }
 
 // NewActionsGUI instantiates a new ActionsGUI struct
-func NewActionsGUI(u pipeline.Usecase) *ActionsGUI {
+func NewActionsGUI(u action.Usecase) *ActionsGUI {
 	return &ActionsGUI{
-		usecase: action.NewActionUsecase(u),
+		usecase: u,
+		runner:  NewRunnerGUI(u),
 	}
+}
+
+const (
+	viewAllActions string = "view all actions"
+	addNewAction   string = "add new action"
+)
+
+var actionDropdownOpts = []string{
+	viewAllActions,
+	addNewAction,
+	quit,
+}
+
+// HandleActionsDropdown handles the initial dropdown for the actions GUI when selecting next steps for how to interact with one's defined (or undefined) actions
+func (ag *ActionsGUI) HandleActionsDropdown() error {
+	actionSelect := gui.SelectPromptWithResponse("select from dropdown", actionDropdownOpts, nil, true)
+	ag.runner.action = ag
+
+	switch actionSelect {
+	case viewAllActions:
+		all, err := ag.usecase.GetAll()
+		if err != nil {
+			gui.ExitWithError(err)
+		}
+
+		if all == nil {
+			gui.Warn("you do not have any actions defined yet", nil)
+			return ag.HandleActionsDropdown()
+		}
+
+		selected := ag.SelectActionFromDropdown(all)
+		return ag.SelectIndividualActionsActionsDropdown(selected)
+	case addNewAction:
+		newAction := &entity.Action{
+			Name:        gui.InputPromptWithResponse("what do you want to call this action? (no spaces)", "", true),
+			Description: gui.InputPromptWithResponse("describe what this action does", "", true),
+		}
+
+		newRunner, err := ag.runner.AddNewRunner()
+		if err != nil {
+			return err
+		}
+
+		newAction.Runner = newRunner
+
+		err = ag.usecase.SaveAction(newAction)
+		if err != nil {
+			return err
+		}
+
+		return ag.HandleActionsDropdown()
+	case quit:
+		os.Exit(0)
+	}
+
+	return nil
+}
+
+func getActionNames(actions map[string]*entity.Action) []string {
+	names := []string{}
+	for n := range actions {
+		names = append(names, n)
+	}
+
+	return names
 }

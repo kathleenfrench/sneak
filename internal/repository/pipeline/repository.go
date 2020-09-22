@@ -57,7 +57,7 @@ func (r *pipelineRepository) RemovePipeline(name string) error {
 	}
 
 	delete(manifest.Pipelines, name)
-	return nil
+	return r.SaveManifest(manifest)
 }
 
 func (r *pipelineRepository) ManifestExists() (bool, error) {

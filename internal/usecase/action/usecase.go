@@ -1,6 +1,8 @@
 package action
 
 import (
+	"fmt"
+
 	"github.com/kathleenfrench/sneak/internal/entity"
 	"github.com/kathleenfrench/sneak/internal/usecase/pipeline"
 )
@@ -8,6 +10,10 @@ import (
 // Usecase is an interface for methods controlling actions in pipelines
 type Usecase interface {
 	SaveAction(action *entity.Action) error
+	GetAll() (map[string]*entity.Action, error)
+	GetByName(name string) (*entity.Action, error)
+	RemoveAction(name string) error
+	GetJobActions(names []string) (map[string]*entity.Action, error)
 }
 
 type actionUsecase struct {
@@ -20,5 +26,72 @@ func NewActionUsecase(u pipeline.Usecase) Usecase {
 }
 
 func (u *actionUsecase) SaveAction(action *entity.Action) error {
-	return nil
+	manifest, err := u.GetManifest()
+	if err != nil {
+		return err
+	}
+
+	if manifest.Actions == nil {
+		manifest.Actions = make(map[string]*entity.Action)
+	}
+
+	manifest.Actions[action.Name] = action
+	return u.SaveManifest(manifest)
+}
+
+func (u *actionUsecase) GetAll() (map[string]*entity.Action, error) {
+	manifest, err := u.GetManifest()
+	if err != nil {
+		return nil, err
+	}
+
+	return manifest.Actions, nil
+}
+
+func (u *actionUsecase) GetJobActions(names []string) (map[string]*entity.Action, error) {
+	jobActions := make(map[string]*entity.Action)
+	manifest, err := u.GetManifest()
+	if err != nil {
+		return nil, err
+	}
+
+	for _, a := range names {
+		if v, ok := manifest.Actions[a]; ok {
+			jobActions[a] = v
+		}
+	}
+
+	return jobActions, nil
+}
+
+func (u *actionUsecase) GetByName(name string) (*entity.Action, error) {
+	manifest, err := u.GetManifest()
+	if err != nil {
+		return nil, err
+	}
+
+	if manifest.Actions == nil {
+		manifest.Actions = make(map[string]*entity.Action)
+	}
+
+	if m, ok := manifest.Actions[name]; ok {
+		return m, nil
+	}
+
+	return nil, fmt.Errorf("action %q not found", name)
+}
+
+func (u *actionUsecase) RemoveAction(name string) error {
+	_, err := u.GetByName(name)
+	if err != nil {
+		return err
+	}
+
+	manifest, err := u.GetManifest()
+	if err != nil {
+		return err
+	}
+
+	delete(manifest.Actions, name)
+	return u.SaveManifest(manifest)
 }

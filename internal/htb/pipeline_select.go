@@ -3,6 +3,7 @@ package htb
 import (
 	"os"
 
+	"github.com/fatih/color"
 	"github.com/kathleenfrench/common/gui"
 	"github.com/kathleenfrench/sneak/internal/entity"
 )
@@ -16,7 +17,6 @@ const (
 
 var pipelineActions = []string{
 	jobs,
-	actions,
 	wordlists,
 	editDescription,
 	returnToPipelines,
@@ -40,8 +40,8 @@ func (pg *pipelineGUI) SelectPipelineActionsDropdown(pipeline *entity.Pipeline, 
 		pg.jobsGUI.pipeline = pipeline
 		pg.jobsGUI.pipelines = pipelines
 		return pg.jobsGUI.HandleJobsDropdown(pipeline.Jobs)
-	case actions:
 	case wordlists:
+		color.Red("TODO")
 	case editDescription:
 		pipeline.Description = gui.InputPromptWithResponse("provide a new description", "", true)
 		err := pg.usecase.SavePipeline(pipeline)

@@ -11,6 +11,8 @@ ARG GID
 
 RUN apk update && apk add --no-cache \
     openvpn easy-rsa bash netcat-openbsd zip dumb-init \
+    nmap nmap-nselibs nmap-scripts \
+    curl curl-dev wget \
     privoxy curl tmux vim sudo \
     openssh-client git
 

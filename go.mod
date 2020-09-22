@@ -20,6 +20,7 @@ require (
 	github.com/spf13/cobra v1.0.0
 	github.com/spf13/viper v1.7.1
 	github.com/timshannon/bolthold v0.0.0-20200812184133-010bd25d1ae5
+	github.com/txn2/txeh v1.3.0
 	go.etcd.io/bbolt v1.3.5
 	golang.org/x/net v0.0.0-20200625001655-4c5254603344 // indirect
 	gopkg.in/yaml.v2 v2.3.0
